@@ -4896,7 +4896,8 @@ Backend: NestJS, Mongoose, JWT, bcrypt, class-validator, etc.
 Frontends: Next.js, React Query, Zustand, React Hook Form, Zod, date-fns (Arabic locale)
 Basic folder structure for all projects
 README files with setup instructions
-PHASE 1.5 – Marketing Website 9) Implement marketing pages in /frontend-platform:
+PHASE 1.5 – Marketing Website 
+Implement marketing pages in /frontend-platform:
 Landing page (/) - hero, features, pricing preview, testimonials, CTA
 Features page (/features) - detailed feature descriptions
 Pricing page (/pricing) - 3 tiers with comparison, Arabic content
