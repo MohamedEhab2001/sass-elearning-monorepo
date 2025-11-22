@@ -11,6 +11,7 @@ import { EnrollmentsService } from '../enrollments/enrollments.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { DiscountsService } from '../discounts/discounts.service';
 import { EmailsService } from '../emails/emails.service';
+import { CommissionsService } from '../commissions/commissions.service';
 import { CreatePayoutDto, UpdatePayoutStatusDto } from './dto/payout.dto';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,6 +28,7 @@ export class PaymentsService {
     private subscriptionsService: SubscriptionsService,
     private discountsService: DiscountsService,
     private emailsService: EmailsService,
+    private commissionsService: CommissionsService,
   ) {}
 
   /**
@@ -332,6 +334,38 @@ export class PaymentsService {
     if (verification.success) {
       transaction.status = TransactionStatus.COMPLETED;
       transaction.completedAt = new Date();
+
+      // Calculate and store commission for course transactions
+      if (transaction.courseId) {
+        try {
+          const course = await this.courseModel.findById(transaction.courseId).exec();
+          if (course && course.instructorId) {
+            // Get instructor's total revenue to determine tier
+            const instructorRevenue = await this.getInstructorTotalRevenue(
+              course.instructorId.toString(),
+              transaction.tenantId.toString(),
+            );
+
+            // Calculate commission
+            const commissionCalc = await this.commissionsService.calculateCommission(
+              transaction.tenantId.toString(),
+              instructorRevenue,
+              transaction.amount,
+            );
+
+            // Store commission data in transaction
+            transaction.commissionRate = commissionCalc.commissionRate;
+            transaction.commissionAmount = commissionCalc.commissionAmount;
+            transaction.instructorNetAmount = commissionCalc.netAmount;
+            if (commissionCalc.tierId) {
+              transaction.commissionTierId = new Types.ObjectId(commissionCalc.tierId);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to calculate commission:', error);
+          // Continue with transaction completion even if commission calculation fails
+        }
+      }
 
       // Check if this is a course or subscription payment
       if (transaction.courseId) {
@@ -742,5 +776,32 @@ export class PaymentsService {
 
     payout.status = PayoutStatus.CANCELLED;
     return payout.save();
+  }
+
+  /**
+   * Get instructor's total revenue (sum of all completed transactions)
+   * Used to determine commission tier
+   */
+  private async getInstructorTotalRevenue(instructorId: string, tenantId: string): Promise<number> {
+    // Get all courses by this instructor
+    const courses = await this.courseModel
+      .find({
+        instructorId: new Types.ObjectId(instructorId),
+        tenantId: new Types.ObjectId(tenantId),
+      })
+      .exec();
+
+    const courseIds = courses.map((c) => c._id);
+
+    // Calculate total revenue from completed transactions
+    const transactions = await this.transactionModel
+      .find({
+        courseId: { $in: courseIds },
+        tenantId: new Types.ObjectId(tenantId),
+        status: TransactionStatus.COMPLETED,
+      })
+      .exec();
+
+    return transactions.reduce((sum, t) => sum + t.amount, 0);
   }
 }

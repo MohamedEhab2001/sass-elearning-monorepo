@@ -64,6 +64,19 @@ export class Transaction {
   @Prop({ type: Object, default: {} })
   metadata: Record<string, any>;
 
+  // Commission fields
+  @Prop({ type: Number, default: 0 })
+  commissionRate: number; // Commission percentage applied
+
+  @Prop({ type: Number, default: 0 })
+  commissionAmount: number; // Commission amount deducted
+
+  @Prop({ type: Number, default: 0 })
+  instructorNetAmount: number; // Amount instructor receives after commission
+
+  @Prop({ type: Types.ObjectId, ref: 'CommissionTier', default: null })
+  commissionTierId: Types.ObjectId | null;
+
   @Prop({ type: String, default: null })
   failureReason: string | null;
 

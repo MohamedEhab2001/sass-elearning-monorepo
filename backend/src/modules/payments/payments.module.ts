@@ -12,6 +12,7 @@ import { EnrollmentsModule } from '../enrollments/enrollments.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { DiscountsModule } from '../discounts/discounts.module';
 import { EmailsModule } from '../emails/emails.module';
+import { CommissionsModule } from '../commissions/commissions.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { EmailsModule } from '../emails/emails.module';
     SubscriptionsModule,
     DiscountsModule,
     EmailsModule,
+    CommissionsModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, PaymobService],
