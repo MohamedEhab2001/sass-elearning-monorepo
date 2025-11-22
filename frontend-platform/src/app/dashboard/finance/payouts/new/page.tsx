@@ -4,17 +4,33 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/auth-store';
 import { apiClient } from '@/lib/api-client';
-import { ArrowRight, DollarSign, AlertCircle } from 'lucide-react';
+import { ArrowRight, DollarSign, AlertCircle, TrendingUp, Receipt, Award } from 'lucide-react';
+
+interface CommissionTier {
+  _id: string;
+  nameAr: string;
+  commissionRate: number;
+}
+
+interface InstructorRevenueSummary {
+  totalRevenue: number;
+  totalCommission: number;
+  netRevenue: number;
+  currentTier: CommissionTier | null;
+}
 
 interface RevenueSummary {
+  totalRevenue: number;
+  totalCommission: number;
   availableBalance: number;
 }
 
 export default function NewPayoutPage() {
   const router = useRouter();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
+  const [tierSummary, setTierSummary] = useState<InstructorRevenueSummary | null>(null);
   const [formData, setFormData] = useState({
     amount: '',
     method: 'bank_transfer',
@@ -46,6 +62,20 @@ export default function NewPayoutPage() {
         accessToken!
       );
       setSummary(data);
+
+      // Load commission tier summary
+      if (user?.tenantId && user?._id) {
+        try {
+          const tierData = await apiClient.get<InstructorRevenueSummary>(
+            `/commissions/instructor-summary/${user.tenantId}/${user._id}?totalRevenue=${data.totalRevenue}&totalCommission=${data.totalCommission}`,
+            accessToken!
+          );
+          setTierSummary(tierData);
+        } catch (tierErr) {
+          console.error('Failed to load tier summary:', tierErr);
+        }
+      }
+
       setLoading(false);
     } catch (err: any) {
       setError(err.message || 'فشل تحميل البيانات');
@@ -164,6 +194,68 @@ export default function NewPayoutPage() {
             الرصيد المتاح: {summary ? formatCurrency(summary.availableBalance) : '...'}
           </p>
         </div>
+
+        {/* Revenue Breakdown */}
+        {summary && (
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">تفاصيل الإيرادات</h2>
+
+            <div className="space-y-4">
+              {/* Total Revenue */}
+              <div className="flex items-center justify-between pb-3 border-b">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <TrendingUp className="h-5 w-5" />
+                  <span>إجمالي الإيرادات</span>
+                </div>
+                <span className="text-lg font-semibold text-gray-900">
+                  {formatCurrency(summary.totalRevenue)}
+                </span>
+              </div>
+
+              {/* Commission */}
+              <div className="flex items-center justify-between pb-3 border-b">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Receipt className="h-5 w-5" />
+                  <span>
+                    عمولة المنصة
+                    {tierSummary?.currentTier && (
+                      <span className="mr-1 text-sm">
+                        ({tierSummary.currentTier.commissionRate}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <span className="text-lg font-semibold text-red-600">
+                  -{formatCurrency(summary.totalCommission)}
+                </span>
+              </div>
+
+              {/* Current Tier */}
+              {tierSummary?.currentTier && (
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Award className="h-5 w-5" />
+                    <span>المستوى الحالي</span>
+                  </div>
+                  <span className="text-sm font-medium text-blue-600">
+                    {tierSummary.currentTier.nameAr}
+                  </span>
+                </div>
+              )}
+
+              {/* Available Balance */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2 text-gray-900">
+                  <DollarSign className="h-5 w-5" />
+                  <span className="font-bold">الرصيد المتاح للسحب</span>
+                </div>
+                <span className="text-xl font-bold text-green-600">
+                  {formatCurrency(summary.availableBalance)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Form */}
         <div className="bg-white rounded-xl shadow-sm p-8">

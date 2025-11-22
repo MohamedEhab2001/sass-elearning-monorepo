@@ -91,4 +91,21 @@ export class CommissionsController {
 
     return this.commissionsService.calculateCommission(tenantId, instructorRevenue, transactionAmount);
   }
+
+  // ==================== INSTRUCTOR ENDPOINTS ====================
+
+  @Get('instructor-summary/:tenantId/:instructorId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'instructor')
+  async getInstructorRevenueSummary(
+    @Param('tenantId') tenantId: string,
+    @Param('instructorId') instructorId: string,
+    @Query('totalRevenue') totalRevenue: string,
+    @Query('totalCommission') totalCommission: string,
+  ) {
+    const revenue = parseFloat(totalRevenue);
+    const commission = parseFloat(totalCommission);
+
+    return this.commissionsService.getInstructorRevenueSummary(tenantId, instructorId, revenue, commission);
+  }
 }

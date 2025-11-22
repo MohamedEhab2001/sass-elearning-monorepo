@@ -5,7 +5,26 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/store/auth-store';
 import { apiClient } from '@/lib/api-client';
-import { ArrowRight, Plus, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
+import { ArrowRight, Plus, Clock, CheckCircle, XCircle, Ban, TrendingUp, Receipt, Award, DollarSign } from 'lucide-react';
+
+interface CommissionTier {
+  _id: string;
+  nameAr: string;
+  commissionRate: number;
+}
+
+interface InstructorRevenueSummary {
+  totalRevenue: number;
+  totalCommission: number;
+  netRevenue: number;
+  currentTier: CommissionTier | null;
+}
+
+interface RevenueSummary {
+  totalRevenue: number;
+  totalCommission: number;
+  availableBalance: number;
+}
 
 interface Payout {
   _id: string;
@@ -22,9 +41,11 @@ interface Payout {
 
 export default function PayoutsListPage() {
   const router = useRouter();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [financeSummary, setFinanceSummary] = useState<RevenueSummary | null>(null);
+  const [tierSummary, setTierSummary] = useState<InstructorRevenueSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -44,6 +65,31 @@ export default function PayoutsListPage() {
         accessToken!
       );
       setPayouts(data);
+
+      // Load financial summary
+      try {
+        const financeData = await apiClient.get<RevenueSummary>(
+          '/payments/finance/summary',
+          accessToken!
+        );
+        setFinanceSummary(financeData);
+
+        // Load commission tier summary
+        if (user?.tenantId && user?._id) {
+          try {
+            const tierData = await apiClient.get<InstructorRevenueSummary>(
+              `/commissions/instructor-summary/${user.tenantId}/${user._id}?totalRevenue=${financeData.totalRevenue}&totalCommission=${financeData.totalCommission}`,
+              accessToken!
+            );
+            setTierSummary(tierData);
+          } catch (tierErr) {
+            console.error('Failed to load tier summary:', tierErr);
+          }
+        }
+      } catch (financeErr) {
+        console.error('Failed to load finance summary:', financeErr);
+      }
+
       setLoading(false);
     } catch (err: any) {
       setError(err.message || 'فشل تحميل طلبات السحب');
@@ -187,6 +233,74 @@ export default function PayoutsListPage() {
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}
+          </div>
+        )}
+
+        {/* Revenue Breakdown */}
+        {financeSummary && (
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">تفاصيل الإيرادات والعمولات</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                {/* Total Revenue */}
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <TrendingUp className="h-5 w-5" />
+                    <span>إجمالي الإيرادات</span>
+                  </div>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {formatCurrency(financeSummary.totalRevenue)}
+                  </span>
+                </div>
+
+                {/* Commission */}
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Receipt className="h-5 w-5" />
+                    <span>
+                      عمولة المنصة
+                      {tierSummary?.currentTier && (
+                        <span className="mr-1 text-sm">
+                          ({tierSummary.currentTier.commissionRate}%)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <span className="text-lg font-semibold text-red-600">
+                    -{formatCurrency(financeSummary.totalCommission)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                {/* Current Tier */}
+                {tierSummary?.currentTier && (
+                  <div className="flex items-center justify-between pb-3 border-b">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Award className="h-5 w-5" />
+                      <span>المستوى الحالي</span>
+                    </div>
+                    <span className="text-sm font-medium text-blue-600">
+                      {tierSummary.currentTier.nameAr}
+                    </span>
+                  </div>
+                )}
+
+                {/* Available Balance */}
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <div className="flex items-center gap-2 text-gray-900">
+                    <DollarSign className="h-5 w-5" />
+                    <span className="font-bold">الرصيد المتاح</span>
+                  </div>
+                  <span className="text-xl font-bold text-green-600">
+                    {formatCurrency(financeSummary.availableBalance)}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

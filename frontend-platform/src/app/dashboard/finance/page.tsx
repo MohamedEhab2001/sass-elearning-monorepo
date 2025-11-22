@@ -15,7 +15,29 @@ import {
   Eye,
   Receipt,
   Wallet,
+  Award,
+  Target,
 } from 'lucide-react';
+
+interface CommissionTier {
+  _id: string;
+  nameAr: string;
+  nameEn: string;
+  minRevenue: number;
+  maxRevenue: number | null;
+  commissionRate: number;
+}
+
+interface InstructorRevenueSummary {
+  instructorId: string;
+  tenantId: string;
+  totalRevenue: number;
+  totalCommission: number;
+  netRevenue: number;
+  currentTier: CommissionTier | null;
+  nextTier: CommissionTier | null;
+  progressToNextTier?: number;
+}
 
 interface RevenueSummary {
   totalRevenue: number;
@@ -30,9 +52,10 @@ interface RevenueSummary {
 
 export default function FinanceOverviewPage() {
   const router = useRouter();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
+  const [tierSummary, setTierSummary] = useState<InstructorRevenueSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -42,16 +65,31 @@ export default function FinanceOverviewPage() {
       return;
     }
 
-    loadFinanceSummary();
+    loadFinanceData();
   }, [accessToken, router]);
 
-  const loadFinanceSummary = async () => {
+  const loadFinanceData = async () => {
     try {
       const data = await apiClient.get<RevenueSummary>(
         '/payments/finance/summary',
         accessToken!
       );
       setSummary(data);
+
+      // Load commission tier summary
+      if (user?.tenantId && user?._id) {
+        try {
+          const tierData = await apiClient.get<InstructorRevenueSummary>(
+            `/commissions/instructor-summary/${user.tenantId}/${user._id}?totalRevenue=${data.totalRevenue}&totalCommission=${data.totalCommission}`,
+            accessToken!
+          );
+          setTierSummary(tierData);
+        } catch (tierErr) {
+          console.error('Failed to load tier summary:', tierErr);
+          // Don't fail the whole page if tier info fails
+        }
+      }
+
       setLoading(false);
     } catch (err: any) {
       setError(err.message || 'فشل تحميل البيانات المالية');
@@ -97,6 +135,8 @@ export default function FinanceOverviewPage() {
 
   if (!summary) return null;
 
+  const currentCommissionRate = tierSummary?.currentTier?.commissionRate ?? 0;
+
   const kpis = [
     {
       title: 'إجمالي الإيرادات',
@@ -110,7 +150,9 @@ export default function FinanceOverviewPage() {
       value: formatCurrency(summary.netRevenue),
       icon: TrendingUp,
       color: 'green',
-      description: 'بعد خصم العمولة (15%)',
+      description: currentCommissionRate > 0
+        ? `بعد خصم العمولة (${currentCommissionRate}%)`
+        : 'بعد خصم العمولة',
     },
     {
       title: 'الرصيد المتاح',
@@ -130,7 +172,9 @@ export default function FinanceOverviewPage() {
 
   const stats = [
     {
-      label: 'عمولة المنصة (15%)',
+      label: tierSummary?.currentTier
+        ? `عمولة المنصة (${currentCommissionRate}%)`
+        : 'عمولة المنصة',
       value: formatCurrency(summary.totalCommission),
       icon: Receipt,
     },
@@ -166,6 +210,88 @@ export default function FinanceOverviewPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">لوحة التحكم المالية</h1>
           <p className="text-gray-600">نظرة عامة على أرباحك ومدفوعاتك</p>
         </div>
+
+        {/* Commission Tier Section */}
+        {tierSummary && (
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 mb-8 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <Award className="h-8 w-8" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {tierSummary.currentTier
+                      ? tierSummary.currentTier.nameAr
+                      : 'لا يوجد مستوى'}
+                  </h2>
+                  <p className="text-sm opacity-90">
+                    {tierSummary.currentTier
+                      ? `نسبة العمولة: ${tierSummary.currentTier.commissionRate}%`
+                      : 'لم يتم تطبيق عمولة بعد'}
+                  </p>
+                </div>
+              </div>
+              {tierSummary.currentTier && (
+                <div className="text-right">
+                  <p className="text-sm opacity-90">نطاق الإيرادات</p>
+                  <p className="text-lg font-semibold">
+                    {formatCurrency(tierSummary.currentTier.minRevenue)}
+                    {tierSummary.currentTier.maxRevenue
+                      ? ` - ${formatCurrency(tierSummary.currentTier.maxRevenue)}`
+                      : '+'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Progress to Next Tier */}
+            {tierSummary.nextTier && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    <span className="font-medium">
+                      التقدم نحو المستوى التالي: {tierSummary.nextTier.nameAr}
+                    </span>
+                  </div>
+                  <span className="text-sm">
+                    {tierSummary.progressToNextTier?.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-white h-full rounded-full transition-all duration-500"
+                    style={{ width: `${tierSummary.progressToNextTier || 0}%` }}
+                  ></div>
+                </div>
+                <div className="flex items-center justify-between mt-2 text-sm opacity-90">
+                  <span>إيراداتك الحالية: {formatCurrency(tierSummary.totalRevenue)}</span>
+                  <span>
+                    المطلوب للمستوى التالي: {formatCurrency(tierSummary.nextTier.minRevenue)}
+                  </span>
+                </div>
+                <div className="mt-3 bg-white/10 rounded-lg p-3">
+                  <p className="text-sm">
+                    عند الوصول للمستوى التالي، ستنخفض نسبة العمولة إلى{' '}
+                    <span className="font-bold">{tierSummary.nextTier.commissionRate}%</span>
+                    {' '}وستحصل على أرباح أكثر من كل عملية بيع!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* No Next Tier - Highest Tier Reached */}
+            {tierSummary.currentTier && !tierSummary.nextTier && (
+              <div className="mt-4 bg-white/10 rounded-lg p-4 flex items-center gap-3">
+                <Award className="h-6 w-6" />
+                <p className="font-medium">
+                  تهانينا! لقد وصلت إلى أعلى مستوى في برنامج العمولات
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -267,7 +393,18 @@ export default function FinanceOverviewPage() {
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
           <h3 className="font-bold text-blue-900 mb-2">ملاحظة هامة</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• يتم خصم عمولة منصة بنسبة 15% من كل معاملة</li>
+            {tierSummary?.currentTier ? (
+              <li>
+                • يتم خصم عمولة منصة بنسبة {currentCommissionRate}% من كل معاملة
+                {tierSummary.nextTier && (
+                  <span>
+                    {' '}(يمكنك خفضها إلى {tierSummary.nextTier.commissionRate}% بزيادة إيراداتك)
+                  </span>
+                )}
+              </li>
+            ) : (
+              <li>• لا يوجد عمولة حاليًا على معاملاتك</li>
+            )}
             <li>• الحد الأدنى لطلب السحب هو 100 جنيه</li>
             <li>• يتم معالجة طلبات السحب خلال 3-5 أيام عمل</li>
             <li>• تأكد من إدخال معلومات الدفع بشكل صحيح</li>
