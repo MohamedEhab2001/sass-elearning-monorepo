@@ -19,6 +19,7 @@ import { DiscountsModule } from './modules/discounts/discounts.module';
 import { CustomFieldsModule } from './modules/custom-fields/custom-fields.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { CommissionsModule } from './modules/commissions/commissions.module';
+import { DomainsModule } from './modules/domains/domains.module';
 import { UiConfigModule } from './modules/ui-config/ui-config.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
@@ -62,6 +63,7 @@ import { HealthModule } from './modules/health/health.module';
     CustomFieldsModule,
     ExamsModule,
     CommissionsModule,
+    DomainsModule,
     UiConfigModule,
     AdminModule,
     HealthModule,
