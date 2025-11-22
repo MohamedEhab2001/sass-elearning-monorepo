@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
@@ -13,6 +16,7 @@ import { ProgressModule } from './modules/progress/progress.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { UiConfigModule } from './modules/ui-config/ui-config.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -29,6 +33,14 @@ import { AdminModule } from './modules/admin/admin.module';
       }),
     }),
 
+    // Rate limiting - 100 requests per 15 minutes per IP
+    ThrottlerModule.forRoot([
+      {
+        ttl: 900000, // 15 minutes in milliseconds
+        limit: 100,  // 100 requests
+      },
+    ]),
+
     // Feature modules
     AuthModule,
     UsersModule,
@@ -42,8 +54,14 @@ import { AdminModule } from './modules/admin/admin.module';
     PaymentsModule,
     UiConfigModule,
     AdminModule,
+    HealthModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
