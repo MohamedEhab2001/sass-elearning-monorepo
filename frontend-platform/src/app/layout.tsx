@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Cairo } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
+import { ThemeProvider } from '@/contexts/theme-context';
 import './globals.css';
 
 const cairo = Cairo({
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
       <body className="font-cairo antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

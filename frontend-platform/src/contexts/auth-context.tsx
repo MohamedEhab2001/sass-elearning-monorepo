@@ -9,6 +9,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { IUserResponse, ITenantResponse } from '@/../../shared/types';
 import { authService } from '@/services/auth.service';
+import { useTheme } from './theme-context';
+import { getThemeFromTenant } from '@/lib/theme';
 
 interface AuthContextType {
   user: IUserResponse | null;
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { setTheme } = useTheme();
 
   // Load auth state from localStorage on mount
   useEffect(() => {
@@ -83,6 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verifyToken();
     }
   }, []); // Only run once on mount
+
+  // Apply theme when tenant changes
+  useEffect(() => {
+    if (tenant) {
+      const tenantTheme = getThemeFromTenant(tenant);
+      setTheme(tenantTheme);
+    }
+  }, [tenant, setTheme]);
 
   const login = (token: string, user: IUserResponse, tenant: ITenantResponse | null) => {
     setAccessToken(token);

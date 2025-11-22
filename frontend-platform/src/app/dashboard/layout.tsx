@@ -4,13 +4,14 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
+import { useTheme } from '@/contexts/theme-context';
 
 const navigation = [
   {
     name: 'لوحة التحكم',
     href: '/dashboard',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -24,7 +25,7 @@ const navigation = [
     name: 'الدورات',
     href: '/dashboard/courses',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -38,7 +39,7 @@ const navigation = [
     name: 'الطلاب',
     href: '/dashboard/students',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -52,7 +53,7 @@ const navigation = [
     name: 'الامتحانات',
     href: '/dashboard/exams',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -66,7 +67,7 @@ const navigation = [
     name: 'المالية',
     href: '/dashboard/finance',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -80,7 +81,7 @@ const navigation = [
     name: 'إعدادات الأكاديمية',
     href: '/dashboard/academy',
     icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -102,6 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const { user, tenant, isLoading, isAuthenticated, logout } = useAuth();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -111,8 +113,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-t-4 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">جاري التحميل...</p>
+        </div>
       </div>
     );
   }
@@ -122,60 +127,90 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="fixed inset-y-0 right-0 w-64 bg-white border-s border-gray-200 flex flex-col">
-        {/* Logo/Academy Info */}
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">{tenant?.name || 'الأكاديمية'}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {user?.firstName} {user?.lastName}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+      {/* Sidebar with Modern Design */}
+      <div className="fixed inset-y-0 right-0 w-72 bg-white/80 backdrop-blur-xl border-s border-gray-200/50 flex flex-col shadow-2xl">
+        {/* Logo/Academy Info with Gradient */}
+        <div className="p-6 border-b border-gray-200/50 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <h1 className="text-xl font-bold truncate">{tenant?.name || 'الأكاديمية'}</h1>
+            </div>
+            <p className="text-sm text-blue-100 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {user?.firstName} {user?.lastName}
+            </p>
+          </div>
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
+        {/* Navigation with Enhanced Styling */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin">
+          {navigation.map((item, index) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-primary text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
+                  ${
+                    isActive
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                      : 'text-gray-700 hover:bg-gray-100 hover:scale-102 hover:shadow-md'
+                  }
+                `}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                {item.icon}
-                <span className="font-medium">{item.name}</span>
+                {isActive && (
+                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                )}
+                <div className={`relative z-10 transition-transform duration-300 ${isActive ? '' : 'group-hover:scale-110'}`}>
+                  {item.icon}
+                </div>
+                <span className="font-medium relative z-10">{item.name}</span>
+                {isActive && (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-s-full"></div>
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* User Menu */}
-        <div className="p-4 border-t border-gray-200">
+        {/* User Menu with Modern Design */}
+        <div className="p-4 border-t border-gray-200/50 bg-gray-50/50">
           <button
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-right text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-right text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-300 group"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
+            <div className="group-hover:scale-110 transition-transform">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+            </div>
             <span className="font-medium">تسجيل الخروج</span>
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="me-64">
-        <div className="p-8">{children}</div>
+      <div className="me-72">
+        <div className="p-8 min-h-screen">
+          {children}
+        </div>
       </div>
     </div>
   );
