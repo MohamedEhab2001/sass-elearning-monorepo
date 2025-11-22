@@ -25,10 +25,10 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
 
-    /* Dynamic theme colors (RGB format for opacity) */
-    --color-primary: 59, 130, 246;
-    --color-secondary: 16, 185, 129;
-    --color-accent: 245, 158, 11;
+    /* Dynamic theme colors (RGB format for opacity) - Vibrant Theme */
+    --color-primary: 99, 102, 241;
+    --color-secondary: 139, 92, 246;
+    --color-accent: 236, 72, 153;
   }
 
   .dark {
@@ -224,5 +224,68 @@
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: rgba(var(--color-primary), 0.8);
+  }
+
+  /* Floating Animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .float-delay-1 {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: 1s;
+  }
+
+  .float-delay-2 {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: 2s;
+  }
+
+  /* Shimmer Effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  /* Bounce Animation */
+  .bounce-slow {
+    animation: bounce 3s infinite;
+  }
+
+  /* Pulse Glow */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(var(--color-primary), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(var(--color-primary), 0.8);
   }
 }
