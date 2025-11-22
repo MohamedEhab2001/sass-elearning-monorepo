@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { TenantsService } from '../tenants/tenants.service';
+import { EmailsService } from '../emails/emails.service';
 import { UserRole } from '../users/schemas/user.schema';
 import { SignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import * as crypto from 'crypto';
@@ -12,6 +13,7 @@ export class AuthService {
     private usersService: UsersService,
     private tenantsService: TenantsService,
     private jwtService: JwtService,
+    private emailsService: EmailsService,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -44,6 +46,13 @@ export class AuthService {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     await this.usersService.setEmailVerificationToken(user._id, verificationToken);
 
+    // Send verification email
+    try {
+      await this.emailsService.sendVerificationEmail(user.email, verificationToken);
+    } catch (error) {
+      console.error('[AuthService] Failed to send verification email:', error);
+    }
+
     // Generate JWT
     const payload = {
       sub: user._id.toString(),
@@ -68,7 +77,7 @@ export class AuthService {
         name: tenant.name,
         slug: tenant.slug,
       },
-      verificationToken, // In production, send via email
+      verificationToken, // For development only
     };
   }
 
@@ -152,7 +161,13 @@ export class AuthService {
     const resetToken = crypto.randomBytes(32).toString('hex');
     await this.usersService.setPasswordResetToken(user.email, resetToken);
 
-    // In production, send via email
+    // Send password reset email
+    try {
+      await this.emailsService.sendPasswordResetEmail(user.email, resetToken);
+    } catch (error) {
+      console.error('[AuthService] Failed to send password reset email:', error);
+    }
+
     return {
       message: 'تم إرسال رسالة إعادة التعيين إلى بريدك الإلكتروني',
       resetToken, // For development only

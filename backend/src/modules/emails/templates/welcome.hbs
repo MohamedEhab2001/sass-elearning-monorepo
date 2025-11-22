@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مرحباً بك</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.8;
+        }
+        .content p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+        }
+        .welcome-icon {
+            text-align: center;
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        .feature-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: start;
+            margin: 15px 0;
+        }
+        .feature-icon {
+            font-size: 24px;
+            margin-left: 15px;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff !important;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666666;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 مرحباً بك في {{tenantName}}</h1>
+        </div>
+        <div class="content">
+            <div class="welcome-icon">👋</div>
+
+            <p>عزيزي {{studentName}}،</p>
+            <p>نرحب بك في <strong>{{tenantName}}</strong>! نحن سعداء جداً بانضمامك إلى مجتمعنا التعليمي.</p>
+
+            <p>الآن أصبح بإمكانك:</p>
+
+            <div class="feature-box">
+                <div class="feature-item">
+                    <span class="feature-icon">📚</span>
+                    <div>
+                        <strong>استكشاف الدورات</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">تصفح مكتبتنا الواسعة من الدورات التعليمية في مختلف المجالات</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    <div>
+                        <strong>التعلم بالسرعة التي تناسبك</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">تعلم في أي وقت ومن أي مكان بما يتناسب مع جدولك</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">📊</span>
+                    <div>
+                        <strong>تتبع تقدمك</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">راقب إنجازاتك وتقدمك في الدورات التي تلتحق بها</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🏆</span>
+                    <div>
+                        <strong>احصل على الشهادات</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">احصل على شهادات إتمام عند إكمال الدورات بنجاح</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{platformUrl}}" class="button">ابدأ التعلم الآن</a>
+            </div>
+
+            <p>إذا كان لديك أي أسئلة أو تحتاج إلى مساعدة، فريق الدعم لدينا جاهز دائماً لمساعدتك.</p>
+            <p>نتمنى لك رحلة تعليمية ممتعة ومثمرة!</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 {{tenantName}} - جميع الحقوق محفوظة</p>
+            <p>ابدأ رحلتك التعليمية اليوم!</p>
+        </div>
+    </div>
+</body>
+</html>

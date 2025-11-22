@@ -3,13 +3,19 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Enrollment, EnrollmentDocument, EnrollmentStatus } from './schemas/enrollment.schema';
 import { Course, CourseDocument, CourseStatus } from '../courses/schemas/course.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
+import { EmailsService } from '../emails/emails.service';
 import { CreateEnrollmentDto } from './dto/enrollment.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class EnrollmentsService {
   constructor(
     @InjectModel(Enrollment.name) private enrollmentModel: Model<EnrollmentDocument>,
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private emailsService: EmailsService,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -80,6 +86,44 @@ export class EnrollmentsService {
         },
       )
       .exec();
+
+    // Send enrollment confirmation email
+    try {
+      const student = await this.userModel.findById(studentId).exec();
+      const courseWithInstructor = await this.courseModel
+        .findById(courseId)
+        .populate('instructorId', 'fullName')
+        .exec();
+
+      if (student && courseWithInstructor) {
+        const academyBaseUrl = this.configService.get<string>('ACADEMY_BASE_URL');
+        const courseUrl = `${academyBaseUrl}/courses/${courseWithInstructor.slug}`;
+
+        await this.emailsService.sendEnrollmentConfirmation(student.email, {
+          studentName: student.fullName,
+          courseTitle: courseWithInstructor.title,
+          instructorName: (courseWithInstructor.instructorId as any).fullName,
+          courseUrl,
+        });
+
+        // Send welcome email if this is the student's first enrollment
+        const previousEnrollments = await this.enrollmentModel
+          .countDocuments({
+            studentId: new Types.ObjectId(studentId),
+            _id: { $ne: savedEnrollment._id },
+          })
+          .exec();
+
+        if (previousEnrollments === 0) {
+          await this.emailsService.sendWelcomeEmail(student.email, {
+            studentName: student.fullName,
+            tenantName: undefined, // Will use default in email template
+          });
+        }
+      }
+    } catch (error) {
+      console.error('[EnrollmentsService] Failed to send enrollment email:', error);
+    }
 
     return savedEnrollment;
   }

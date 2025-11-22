@@ -9,6 +9,7 @@ import { Course, CourseSchema } from '../courses/schemas/course.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { Tenant, TenantSchema } from '../tenants/schemas/tenant.schema';
 import { EnrollmentsModule } from '../enrollments/enrollments.module';
+import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EnrollmentsModule } from '../enrollments/enrollments.module';
       { name: Tenant.name, schema: TenantSchema },
     ]),
     EnrollmentsModule,
+    EmailsModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, PaymobService],

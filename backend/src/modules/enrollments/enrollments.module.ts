@@ -4,13 +4,17 @@ import { EnrollmentsController } from './enrollments.controller';
 import { EnrollmentsService } from './enrollments.service';
 import { Enrollment, EnrollmentSchema } from './schemas/enrollment.schema';
 import { Course, CourseSchema } from '../courses/schemas/course.schema';
+import { User, UserSchema } from '../users/schemas/user.schema';
+import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Enrollment.name, schema: EnrollmentSchema },
       { name: Course.name, schema: CourseSchema },
+      { name: User.name, schema: UserSchema },
     ]),
+    EmailsModule,
   ],
   controllers: [EnrollmentsController],
   providers: [EnrollmentsService],

@@ -8,6 +8,7 @@ import { User, UserDocument } from '../users/schemas/user.schema';
 import { Tenant, TenantDocument } from '../tenants/schemas/tenant.schema';
 import { PaymobService } from './paymob.service';
 import { EnrollmentsService } from '../enrollments/enrollments.service';
+import { EmailsService } from '../emails/emails.service';
 import { CreatePayoutDto, UpdatePayoutStatusDto } from './dto/payout.dto';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,6 +22,7 @@ export class PaymentsService {
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     private paymobService: PaymobService,
     private enrollmentsService: EnrollmentsService,
+    private emailsService: EmailsService,
   ) {}
 
   /**
@@ -140,6 +142,8 @@ export class PaymentsService {
       .findOne({
         providerOrderId: verification.orderId,
       })
+      .populate('userId')
+      .populate('courseId')
       .exec();
 
     if (!transaction) {
@@ -170,9 +174,37 @@ export class PaymentsService {
         // Transaction is successful but enrollment failed
         // This should be handled manually or with retry logic
       }
+
+      // Send purchase receipt email
+      try {
+        const user = transaction.userId as any;
+        const course = transaction.courseId as any;
+        await this.emailsService.sendPurchaseReceipt(user.email, {
+          studentName: user.fullName,
+          courseTitle: course.title,
+          amount: transaction.amount,
+          transactionId: transaction.transactionId,
+          purchaseDate: transaction.completedAt,
+        });
+      } catch (error) {
+        console.error('[PaymentsService] Failed to send purchase receipt email:', error);
+      }
     } else {
       transaction.status = TransactionStatus.FAILED;
       transaction.failureReason = 'Payment was not successful';
+
+      // Send payment failure email
+      try {
+        const user = transaction.userId as any;
+        const course = transaction.courseId as any;
+        await this.emailsService.sendPaymentFailure(user.email, {
+          studentName: user.fullName,
+          courseTitle: course.title,
+          reason: transaction.failureReason || 'فشلت عملية الدفع',
+        });
+      } catch (error) {
+        console.error('[PaymentsService] Failed to send payment failure email:', error);
+      }
     }
 
     await transaction.save();
@@ -362,7 +394,23 @@ export class PaymentsService {
       status: PayoutStatus.PENDING,
     });
 
-    return payout.save();
+    const savedPayout = await payout.save();
+
+    // Send payout request received email
+    try {
+      const instructor = await this.userModel.findById(instructorId).exec();
+      if (instructor) {
+        await this.emailsService.sendPayoutRequestReceived(instructor.email, {
+          instructorName: instructor.fullName,
+          amount: savedPayout.amount,
+          requestDate: savedPayout.createdAt,
+        });
+      }
+    } catch (error) {
+      console.error('[PaymentsService] Failed to send payout request email:', error);
+    }
+
+    return savedPayout;
   }
 
   /**
@@ -421,11 +469,14 @@ export class PaymentsService {
         _id: new Types.ObjectId(payoutId),
         tenantId: new Types.ObjectId(tenantId),
       })
+      .populate('instructorId')
       .exec();
 
     if (!payout) {
       throw new NotFoundException('طلب السحب غير موجود');
     }
+
+    const instructor = payout.instructorId as any;
 
     payout.status = updatePayoutStatusDto.status;
     payout.processedBy = new Types.ObjectId(adminId);
@@ -440,7 +491,36 @@ export class PaymentsService {
       payout.transactionReference = updatePayoutStatusDto.transactionReference || null;
     }
 
-    return payout.save();
+    const savedPayout = await payout.save();
+
+    // Send appropriate email based on status
+    try {
+      if (updatePayoutStatusDto.status === PayoutStatus.APPROVED) {
+        await this.emailsService.sendPayoutApproved(instructor.email, {
+          instructorName: instructor.fullName,
+          amount: savedPayout.amount,
+          approvalDate: savedPayout.processedAt,
+        });
+      } else if (updatePayoutStatusDto.status === PayoutStatus.REJECTED) {
+        await this.emailsService.sendPayoutRejected(instructor.email, {
+          instructorName: instructor.fullName,
+          amount: savedPayout.amount,
+          reason: savedPayout.rejectionReason || 'لم يتم تحديد السبب',
+          rejectionDate: savedPayout.processedAt,
+        });
+      } else if (updatePayoutStatusDto.status === PayoutStatus.COMPLETED) {
+        await this.emailsService.sendPayoutCompleted(instructor.email, {
+          instructorName: instructor.fullName,
+          amount: savedPayout.amount,
+          transactionReference: savedPayout.transactionReference || 'N/A',
+          completionDate: savedPayout.completedAt,
+        });
+      }
+    } catch (error) {
+      console.error('[PaymentsService] Failed to send payout status email:', error);
+    }
+
+    return savedPayout;
   }
 
   /**

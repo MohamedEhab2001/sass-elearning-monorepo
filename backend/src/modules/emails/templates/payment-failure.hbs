@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فشل عملية الدفع</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.8;
+        }
+        .content p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+        }
+        .error-box {
+            background-color: #f8d7da;
+            border-right: 4px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .info-box {
+            background-color: #d1ecf1;
+            border-right: 4px solid #17a2b8;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666666;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❌ فشل عملية الدفع</h1>
+        </div>
+        <div class="content">
+            <p>عزيزي {{studentName}}،</p>
+            <p>نأسف لإبلاغك أن عملية الدفع الخاصة بدورة <strong>{{courseTitle}}</strong> لم تتم بنجاح.</p>
+
+            <div class="error-box">
+                <p style="margin: 0;"><strong>سبب الفشل:</strong> {{reason}}</p>
+            </div>
+
+            <div class="info-box">
+                <h3 style="margin-top: 0;">ماذا يمكنك فعله؟</h3>
+                <ul style="margin: 10px 0; padding-right: 20px;">
+                    <li>تأكد من صحة بيانات البطاقة المصرفية</li>
+                    <li>تحقق من وجود رصيد كافٍ في حسابك</li>
+                    <li>تأكد من تفعيل البطاقة للمعاملات الإلكترونية</li>
+                    <li>جرب استخدام بطاقة أخرى</li>
+                </ul>
+            </div>
+
+            <p>يمكنك المحاولة مرة أخرى في أي وقت. نحن هنا لمساعدتك!</p>
+            <p>إذا استمرت المشكلة، يرجى التواصل مع فريق الدعم الفني.</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 منصة الأكاديمية - جميع الحقوق محفوظة</p>
+            <p>لأي استفسارات، لا تتردد في التواصل معنا</p>
+        </div>
+    </div>
+</body>
+</html>

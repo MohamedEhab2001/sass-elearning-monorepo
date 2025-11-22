@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيصال شراء</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.8;
+        }
+        .content p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+        }
+        .receipt-box {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .receipt-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            color: #28a745;
+        }
+        .receipt-label {
+            color: #666666;
+        }
+        .receipt-value {
+            font-weight: 600;
+            color: #333333;
+        }
+        .success-icon {
+            text-align: center;
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666666;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ تم الشراء بنجاح</h1>
+        </div>
+        <div class="content">
+            <div class="success-icon">🎉</div>
+
+            <p>عزيزي {{studentName}}،</p>
+            <p>تهانينا! تم إتمام عملية الشراء بنجاح.</p>
+
+            <div class="receipt-box">
+                <h2 style="margin-top: 0; color: #333333;">تفاصيل الإيصال</h2>
+
+                <div class="receipt-row">
+                    <span class="receipt-label">الدورة</span>
+                    <span class="receipt-value">{{courseTitle}}</span>
+                </div>
+
+                <div class="receipt-row">
+                    <span class="receipt-label">رقم المعاملة</span>
+                    <span class="receipt-value">{{transactionId}}</span>
+                </div>
+
+                <div class="receipt-row">
+                    <span class="receipt-label">تاريخ الشراء</span>
+                    <span class="receipt-value">{{purchaseDate}}</span>
+                </div>
+
+                <div class="receipt-row">
+                    <span class="receipt-label">المبلغ المدفوع</span>
+                    <span class="receipt-value">{{amount}} جنيه</span>
+                </div>
+            </div>
+
+            <p>يمكنك الآن البدء في الدورة والاستفادة من جميع المحتويات والدروس المتاحة.</p>
+            <p>نتمنى لك تجربة تعليمية ممتعة ومفيدة!</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 منصة الأكاديمية - جميع الحقوق محفوظة</p>
+            <p>لأي استفسارات، لا تتردد في التواصل معنا</p>
+        </div>
+    </div>
+</body>
+</html>

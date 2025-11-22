@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكيد التسجيل في الدورة</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+            line-height: 1.8;
+        }
+        .content p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+        }
+        .success-icon {
+            text-align: center;
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        .course-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .course-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 0 0 15px 0;
+        }
+        .course-detail {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            color: #666;
+        }
+        .course-detail-icon {
+            margin-left: 10px;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #ffffff !important;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .tips-box {
+            background-color: #fff3cd;
+            border-right: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666666;
+            font-size: 14px;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 تم التسجيل بنجاح</h1>
+        </div>
+        <div class="content">
+            <div class="success-icon">✨</div>
+
+            <p>عزيزي {{studentName}}،</p>
+            <p>تهانينا! تم تسجيلك بنجاح في الدورة التالية:</p>
+
+            <div class="course-box">
+                <h2 class="course-title">{{courseTitle}}</h2>
+                <div class="course-detail">
+                    <span class="course-detail-icon">👨‍🏫</span>
+                    <span>المدرب: <strong>{{instructorName}}</strong></span>
+                </div>
+            </div>
+
+            <p>يمكنك الآن البدء في مشاهدة الدروس والاستفادة من جميع محتويات الدورة.</p>
+
+            <div style="text-align: center;">
+                <a href="{{courseUrl}}" class="button">ابدأ الدورة الآن</a>
+            </div>
+
+            <div class="tips-box">
+                <h3 style="margin-top: 0;">💡 نصائح للنجاح</h3>
+                <ul style="margin: 10px 0; padding-right: 20px;">
+                    <li>خصص وقتاً منتظماً يومياً أو أسبوعياً للتعلم</li>
+                    <li>دوّن ملاحظاتك أثناء مشاهدة الدروس</li>
+                    <li>مارس ما تعلمته من خلال التطبيق العملي</li>
+                    <li>لا تتردد في إعادة مشاهدة الدروس عند الحاجة</li>
+                    <li>استفد من المواد الإضافية والتمارين المتوفرة</li>
+                </ul>
+            </div>
+
+            <p>نتمنى لك تجربة تعليمية ممتعة ومثمرة!</p>
+            <p>إذا واجهت أي مشكلة، تواصل معنا وسنكون سعداء بمساعدتك.</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 منصة الأكاديمية - جميع الحقوق محفوظة</p>
+            <p>بالتوفيق في رحلتك التعليمية!</p>
+        </div>
+    </div>
+</body>
+</html>
