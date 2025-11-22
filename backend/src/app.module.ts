@@ -11,6 +11,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { UiConfigModule } from './modules/ui-config/ui-config.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     EnrollmentsModule,
     ProgressModule,
     PaymentsModule,
+    UiConfigModule,
   ],
   controllers: [],
   providers: [],
