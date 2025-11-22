@@ -8,6 +8,8 @@ import { EmailsModule } from './modules/emails/emails.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
+import { ProgressModule } from './modules/progress/progress.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { UploadsModule } from './modules/uploads/uploads.module';
     CoursesModule,
     LessonsModule,
     UploadsModule,
+    EnrollmentsModule,
+    ProgressModule,
   ],
   controllers: [],
   providers: [],
