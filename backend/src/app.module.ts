@@ -5,6 +5,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { EmailsModule } from './modules/emails/emails.module';
+import { CoursesModule } from './modules/courses/courses.module';
+import { LessonsModule } from './modules/lessons/lessons.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { EmailsModule } from './modules/emails/emails.module';
     UsersModule,
     TenantsModule,
     EmailsModule,
+    CoursesModule,
+    LessonsModule,
+    UploadsModule,
   ],
   controllers: [],
   providers: [],
