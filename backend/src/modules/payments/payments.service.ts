@@ -2,17 +2,20 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Transaction, TransactionDocument, TransactionStatus, PaymentProvider } from './schemas/transaction.schema';
+import { Payout, PayoutDocument, PayoutStatus } from './schemas/payout.schema';
 import { Course, CourseDocument } from '../courses/schemas/course.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { Tenant, TenantDocument } from '../tenants/schemas/tenant.schema';
 import { PaymobService } from './paymob.service';
 import { EnrollmentsService } from '../enrollments/enrollments.service';
+import { CreatePayoutDto, UpdatePayoutStatusDto } from './dto/payout.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     @InjectModel(Transaction.name) private transactionModel: Model<TransactionDocument>,
+    @InjectModel(Payout.name) private payoutModel: Model<PayoutDocument>,
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
@@ -221,5 +224,250 @@ export class PaymentsService {
       .populate('userId', 'fullName email')
       .sort({ createdAt: -1 })
       .exec();
+  }
+
+  // ==================== FINANCE & PAYOUT METHODS ====================
+
+  /**
+   * Get revenue summary for instructor
+   */
+  async getInstructorRevenueSummary(instructorId: string, tenantId: string): Promise<any> {
+    const tenantIdObj = new Types.ObjectId(tenantId);
+    const instructorIdObj = new Types.ObjectId(instructorId);
+
+    // Get all courses by this instructor
+    const courses = await this.courseModel
+      .find({
+        instructorId: instructorIdObj,
+        tenantId: tenantIdObj,
+      })
+      .select('_id')
+      .exec();
+
+    const courseIds = courses.map((c) => c._id);
+
+    // Calculate total revenue from completed transactions
+    const transactions = await this.transactionModel
+      .find({
+        courseId: { $in: courseIds },
+        tenantId: tenantIdObj,
+        status: TransactionStatus.COMPLETED,
+      })
+      .exec();
+
+    const totalRevenue = transactions.reduce((sum, t) => sum + t.amount, 0);
+
+    // Platform commission (15%)
+    const commissionRate = 0.15;
+    const totalCommission = totalRevenue * commissionRate;
+    const netRevenue = totalRevenue - totalCommission;
+
+    // Get payouts
+    const completedPayouts = await this.payoutModel
+      .find({
+        instructorId: instructorIdObj,
+        tenantId: tenantIdObj,
+        status: PayoutStatus.COMPLETED,
+      })
+      .exec();
+
+    const pendingPayouts = await this.payoutModel
+      .find({
+        instructorId: instructorIdObj,
+        tenantId: tenantIdObj,
+        status: { $in: [PayoutStatus.PENDING, PayoutStatus.APPROVED, PayoutStatus.PROCESSING] },
+      })
+      .exec();
+
+    const completedPayoutsAmount = completedPayouts.reduce((sum, p) => sum + p.amount, 0);
+    const pendingPayoutsAmount = pendingPayouts.reduce((sum, p) => sum + p.amount, 0);
+
+    const availableBalance = netRevenue - completedPayoutsAmount - pendingPayoutsAmount;
+
+    // Count unique students
+    const uniqueStudentIds = new Set(transactions.map((t) => t.userId.toString()));
+    const totalStudents = uniqueStudentIds.size;
+
+    return {
+      totalRevenue,
+      totalCommission,
+      netRevenue,
+      availableBalance,
+      pendingPayouts: pendingPayoutsAmount,
+      completedPayouts: completedPayoutsAmount,
+      totalStudents,
+      totalCourses: courses.length,
+    };
+  }
+
+  /**
+   * Get instructor transactions
+   */
+  async getInstructorTransactions(
+    instructorId: string,
+    tenantId: string,
+  ): Promise<Transaction[]> {
+    const tenantIdObj = new Types.ObjectId(tenantId);
+    const instructorIdObj = new Types.ObjectId(instructorId);
+
+    // Get all courses by this instructor
+    const courses = await this.courseModel
+      .find({
+        instructorId: instructorIdObj,
+        tenantId: tenantIdObj,
+      })
+      .select('_id')
+      .exec();
+
+    const courseIds = courses.map((c) => c._id);
+
+    return this.transactionModel
+      .find({
+        courseId: { $in: courseIds },
+        tenantId: tenantIdObj,
+        status: TransactionStatus.COMPLETED,
+      })
+      .populate('courseId', 'title thumbnail')
+      .populate('userId', 'fullName email')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  /**
+   * Create payout request
+   */
+  async createPayoutRequest(
+    createPayoutDto: CreatePayoutDto,
+    instructorId: string,
+    tenantId: string,
+  ): Promise<Payout> {
+    // Check available balance
+    const summary = await this.getInstructorRevenueSummary(instructorId, tenantId);
+
+    if (createPayoutDto.amount > summary.availableBalance) {
+      throw new BadRequestException('المبلغ المطلوب أكبر من الرصيد المتاح');
+    }
+
+    // Minimum payout amount
+    const minimumPayout = 100; // 100 EGP
+    if (createPayoutDto.amount < minimumPayout) {
+      throw new BadRequestException(`الحد الأدنى للسحب هو ${minimumPayout} جنيه`);
+    }
+
+    const payout = new this.payoutModel({
+      ...createPayoutDto,
+      tenantId: new Types.ObjectId(tenantId),
+      instructorId: new Types.ObjectId(instructorId),
+      currency: 'EGP',
+      status: PayoutStatus.PENDING,
+    });
+
+    return payout.save();
+  }
+
+  /**
+   * Get instructor payouts
+   */
+  async getInstructorPayouts(instructorId: string, tenantId: string): Promise<Payout[]> {
+    return this.payoutModel
+      .find({
+        instructorId: new Types.ObjectId(instructorId),
+        tenantId: new Types.ObjectId(tenantId),
+      })
+      .populate('processedBy', 'fullName email')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  /**
+   * Get all pending payouts (admin)
+   */
+  async getPendingPayouts(tenantId: string): Promise<Payout[]> {
+    return this.payoutModel
+      .find({
+        tenantId: new Types.ObjectId(tenantId),
+        status: PayoutStatus.PENDING,
+      })
+      .populate('instructorId', 'fullName email')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  /**
+   * Get all payouts (admin)
+   */
+  async getAllPayouts(tenantId: string): Promise<Payout[]> {
+    return this.payoutModel
+      .find({
+        tenantId: new Types.ObjectId(tenantId),
+      })
+      .populate('instructorId', 'fullName email')
+      .populate('processedBy', 'fullName email')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  /**
+   * Update payout status (admin)
+   */
+  async updatePayoutStatus(
+    payoutId: string,
+    updatePayoutStatusDto: UpdatePayoutStatusDto,
+    adminId: string,
+    tenantId: string,
+  ): Promise<Payout> {
+    const payout = await this.payoutModel
+      .findOne({
+        _id: new Types.ObjectId(payoutId),
+        tenantId: new Types.ObjectId(tenantId),
+      })
+      .exec();
+
+    if (!payout) {
+      throw new NotFoundException('طلب السحب غير موجود');
+    }
+
+    payout.status = updatePayoutStatusDto.status;
+    payout.processedBy = new Types.ObjectId(adminId);
+    payout.processedAt = new Date();
+
+    if (updatePayoutStatusDto.status === PayoutStatus.REJECTED) {
+      payout.rejectionReason = updatePayoutStatusDto.rejectionReason || null;
+    }
+
+    if (updatePayoutStatusDto.status === PayoutStatus.COMPLETED) {
+      payout.completedAt = new Date();
+      payout.transactionReference = updatePayoutStatusDto.transactionReference || null;
+    }
+
+    return payout.save();
+  }
+
+  /**
+   * Cancel payout request (instructor)
+   */
+  async cancelPayoutRequest(
+    payoutId: string,
+    instructorId: string,
+    tenantId: string,
+  ): Promise<Payout> {
+    const payout = await this.payoutModel
+      .findOne({
+        _id: new Types.ObjectId(payoutId),
+        instructorId: new Types.ObjectId(instructorId),
+        tenantId: new Types.ObjectId(tenantId),
+      })
+      .exec();
+
+    if (!payout) {
+      throw new NotFoundException('طلب السحب غير موجود');
+    }
+
+    if (payout.status !== PayoutStatus.PENDING) {
+      throw new BadRequestException('لا يمكن إلغاء هذا الطلب');
+    }
+
+    payout.status = PayoutStatus.CANCELLED;
+    return payout.save();
   }
 }

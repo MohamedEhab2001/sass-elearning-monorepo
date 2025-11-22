@@ -56,3 +56,77 @@ export interface IPaymentCallback {
   success: boolean;
   amount: number;
 }
+
+// Payout types
+export enum PayoutStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled',
+}
+
+export enum PayoutMethod {
+  BANK_TRANSFER = 'bank_transfer',
+  PAYPAL = 'paypal',
+  MOBILE_WALLET = 'mobile_wallet',
+}
+
+export interface IPayout {
+  _id: string;
+  tenantId: string;
+  instructorId: string;
+  amount: number;
+  currency: string;
+  status: PayoutStatus;
+  method: PayoutMethod;
+  paymentDetails: {
+    accountName?: string;
+    accountNumber?: string;
+    bankName?: string;
+    iban?: string;
+    paypalEmail?: string;
+    mobileNumber?: string;
+    [key: string]: any;
+  };
+  notes: string | null;
+  rejectionReason: string | null;
+  processedAt: Date | null;
+  completedAt: Date | null;
+  processedBy: string | null;
+  transactionReference: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ICreatePayout {
+  amount: number;
+  method: PayoutMethod;
+  paymentDetails: {
+    accountName?: string;
+    accountNumber?: string;
+    bankName?: string;
+    iban?: string;
+    paypalEmail?: string;
+    mobileNumber?: string;
+  };
+  notes?: string;
+}
+
+export interface IRevenueSummary {
+  totalRevenue: number;
+  totalCommission: number;
+  netRevenue: number;
+  availableBalance: number;
+  pendingPayouts: number;
+  completedPayouts: number;
+  totalStudents: number;
+  totalCourses: number;
+}
+
+export interface IRevenueStats {
+  period: string;
+  revenue: number;
+  students: number;
+}
