@@ -8,6 +8,8 @@ import { User, UserDocument } from '../users/schemas/user.schema';
 import { Tenant, TenantDocument } from '../tenants/schemas/tenant.schema';
 import { PaymobService } from './paymob.service';
 import { EnrollmentsService } from '../enrollments/enrollments.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { DiscountsService } from '../discounts/discounts.service';
 import { EmailsService } from '../emails/emails.service';
 import { CreatePayoutDto, UpdatePayoutStatusDto } from './dto/payout.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,16 +24,19 @@ export class PaymentsService {
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     private paymobService: PaymobService,
     private enrollmentsService: EnrollmentsService,
+    private subscriptionsService: SubscriptionsService,
+    private discountsService: DiscountsService,
     private emailsService: EmailsService,
   ) {}
 
   /**
-   * Create payment session for course purchase
+   * Create payment session for course purchase (with optional discount code)
    */
   async createPaymentSession(
     courseId: string,
     userId: string,
     tenantId: string,
+    discountCode?: string,
   ): Promise<{
     paymentUrl: string;
     transactionId: string;
@@ -76,6 +81,34 @@ export class PaymentsService {
       throw new BadRequestException('أنت مسجل بالفعل في هذه الدورة');
     }
 
+    // Validate and apply discount code if provided
+    let finalAmount = course.price;
+    let discountAmount = 0;
+    let discountCodeUsed: string | null = null;
+
+    if (discountCode) {
+      const validation = await this.discountsService.validate(
+        {
+          code: discountCode,
+          applicableTo: 'course',
+          courseId,
+          amount: course.price,
+        },
+        tenantId,
+      );
+
+      if (validation.isValid) {
+        finalAmount = validation.discountedAmount;
+        discountAmount = validation.discountAmount;
+        discountCodeUsed = discountCode;
+
+        // Increment discount usage
+        await this.discountsService.incrementUsage(validation.discount._id, tenantId);
+      } else {
+        throw new BadRequestException(validation.message || 'كود الخصم غير صالح');
+      }
+    }
+
     // Create transaction record
     const transactionId = uuidv4();
     const transaction = new this.transactionModel({
@@ -84,7 +117,10 @@ export class PaymentsService {
       courseId: new Types.ObjectId(courseId),
       provider: PaymentProvider.PAYMOB,
       status: TransactionStatus.PENDING,
-      amount: course.price,
+      amount: finalAmount,
+      originalAmount: course.price,
+      discountAmount,
+      discountCode: discountCodeUsed,
       currency: 'EGP',
       transactionId,
       metadata: {
@@ -95,10 +131,10 @@ export class PaymentsService {
 
     await transaction.save();
 
-    // Create payment session with Paymob
+    // Create payment session with Paymob (using final amount after discount)
     const nameParts = user.fullName.split(' ');
     const paymentSession = await this.paymobService.createPaymentSession(
-      course.price,
+      finalAmount,
       {
         email: user.email,
         firstName: nameParts[0] || 'Student',
@@ -117,6 +153,145 @@ export class PaymentsService {
     transaction.metadata = {
       ...transaction.metadata,
       paymentToken: paymentSession.paymentToken,
+    };
+    await transaction.save();
+
+    return {
+      paymentUrl: paymentSession.paymentUrl,
+      transactionId: transaction.transactionId,
+    };
+  }
+
+  /**
+   * Create payment session for subscription purchase (with optional discount code)
+   */
+  async createSubscriptionPaymentSession(
+    plan: 'monthly' | 'annual',
+    userId: string,
+    tenantId: string,
+    discountCode?: string,
+  ): Promise<{
+    paymentUrl: string;
+    transactionId: string;
+  }> {
+    // Get tenant info and verify subscriptions are enabled
+    const tenant = await this.tenantModel
+      .findById(new Types.ObjectId(tenantId))
+      .exec();
+
+    if (!tenant) {
+      throw new NotFoundException('المنصة غير موجودة');
+    }
+
+    if (!tenant.subscriptionEnabled) {
+      throw new BadRequestException('الاشتراكات غير مفعلة لهذه المنصة');
+    }
+
+    // Get subscription price
+    const subscriptionPrice = plan === 'monthly' ? tenant.monthlyPrice : tenant.annualPrice;
+
+    if (!subscriptionPrice) {
+      throw new BadRequestException('سعر الاشتراك غير محدد');
+    }
+
+    // Get user info
+    const user = await this.userModel
+      .findById(new Types.ObjectId(userId))
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException('المستخدم غير موجود');
+    }
+
+    // Check if user already has active subscription
+    const hasActiveSubscription = await this.subscriptionsService.hasActiveSubscription(
+      userId,
+      tenantId,
+    );
+
+    if (hasActiveSubscription) {
+      throw new BadRequestException('لديك اشتراك نشط بالفعل');
+    }
+
+    // Validate and apply discount code if provided
+    let finalAmount = subscriptionPrice;
+    let discountAmount = 0;
+    let discountCodeUsed: string | null = null;
+
+    if (discountCode) {
+      const validation = await this.discountsService.validate(
+        {
+          code: discountCode,
+          applicableTo: 'subscription',
+          amount: subscriptionPrice,
+        },
+        tenantId,
+      );
+
+      if (validation.isValid) {
+        finalAmount = validation.discountedAmount;
+        discountAmount = validation.discountAmount;
+        discountCodeUsed = discountCode;
+
+        // Increment discount usage
+        await this.discountsService.incrementUsage(validation.discount._id, tenantId);
+      } else {
+        throw new BadRequestException(validation.message || 'كود الخصم غير صالح');
+      }
+    }
+
+    // Create pending subscription
+    const pendingSubscription = await this.subscriptionsService.create(
+      { plan },
+      userId,
+      tenantId,
+    );
+
+    // Create transaction record
+    const transactionId = uuidv4();
+    const transaction = new this.transactionModel({
+      tenantId: new Types.ObjectId(tenantId),
+      userId: new Types.ObjectId(userId),
+      subscriptionId: new Types.ObjectId(pendingSubscription._id),
+      provider: PaymentProvider.PAYMOB,
+      status: TransactionStatus.PENDING,
+      amount: finalAmount,
+      originalAmount: subscriptionPrice,
+      discountAmount,
+      discountCode: discountCodeUsed,
+      currency: 'EGP',
+      transactionId,
+      metadata: {
+        subscriptionPlan: plan,
+        userEmail: user.email,
+      },
+    });
+
+    await transaction.save();
+
+    // Create payment session with Paymob (using final amount after discount)
+    const nameParts = user.fullName.split(' ');
+    const paymentSession = await this.paymobService.createPaymentSession(
+      finalAmount,
+      {
+        email: user.email,
+        firstName: nameParts[0] || 'Student',
+        lastName: nameParts.slice(1).join(' ') || 'User',
+        phone: '01000000000', // Default phone, can be updated from user profile
+      },
+      {
+        tenantSlug: tenant.slug,
+        subscriptionPlan: plan,
+        transactionId,
+      },
+    );
+
+    // Update transaction with Paymob order ID
+    transaction.providerOrderId = paymentSession.orderId;
+    transaction.metadata = {
+      ...transaction.metadata,
+      paymentToken: paymentSession.paymentToken,
+      subscriptionId: pendingSubscription._id.toString(),
     };
     await transaction.save();
 
@@ -158,36 +333,51 @@ export class PaymentsService {
       transaction.status = TransactionStatus.COMPLETED;
       transaction.completedAt = new Date();
 
-      // Create enrollment
-      try {
-        await this.enrollmentsService.enroll(
-          {
-            courseId: transaction.courseId.toString(),
-            pricePaid: transaction.amount,
-            paymentId: transaction.transactionId,
-          },
-          transaction.userId.toString(),
-          transaction.tenantId.toString(),
-        );
-      } catch (error) {
-        console.error('Failed to create enrollment after payment:', error);
-        // Transaction is successful but enrollment failed
-        // This should be handled manually or with retry logic
-      }
+      // Check if this is a course or subscription payment
+      if (transaction.courseId) {
+        // Course payment - create enrollment
+        try {
+          await this.enrollmentsService.enroll(
+            {
+              courseId: transaction.courseId.toString(),
+              pricePaid: transaction.amount,
+              paymentId: transaction.transactionId,
+            },
+            transaction.userId.toString(),
+            transaction.tenantId.toString(),
+          );
+        } catch (error) {
+          console.error('Failed to create enrollment after payment:', error);
+        }
 
-      // Send purchase receipt email
-      try {
-        const user = transaction.userId as any;
-        const course = transaction.courseId as any;
-        await this.emailsService.sendPurchaseReceipt(user.email, {
-          studentName: user.fullName,
-          courseTitle: course.title,
-          amount: transaction.amount,
-          transactionId: transaction.transactionId,
-          purchaseDate: transaction.completedAt,
-        });
-      } catch (error) {
-        console.error('[PaymentsService] Failed to send purchase receipt email:', error);
+        // Send purchase receipt email
+        try {
+          const user = transaction.userId as any;
+          const course = transaction.courseId as any;
+          await this.emailsService.sendPurchaseReceipt(user.email, {
+            studentName: user.fullName,
+            courseTitle: course.title,
+            amount: transaction.amount,
+            transactionId: transaction.transactionId,
+            purchaseDate: transaction.completedAt,
+          });
+        } catch (error) {
+          console.error('[PaymentsService] Failed to send purchase receipt email:', error);
+        }
+      } else if (transaction.subscriptionId) {
+        // Subscription payment - activate subscription
+        try {
+          await this.subscriptionsService.activateAfterPayment(
+            transaction.subscriptionId.toString(),
+            transaction.transactionId,
+            transaction.userId.toString(),
+            transaction.tenantId.toString(),
+          );
+        } catch (error) {
+          console.error('Failed to activate subscription after payment:', error);
+        }
+
+        // TODO: Send subscription confirmation email (can be added later)
       }
     } else {
       transaction.status = TransactionStatus.FAILED;
@@ -196,12 +386,15 @@ export class PaymentsService {
       // Send payment failure email
       try {
         const user = transaction.userId as any;
-        const course = transaction.courseId as any;
-        await this.emailsService.sendPaymentFailure(user.email, {
-          studentName: user.fullName,
-          courseTitle: course.title,
-          reason: transaction.failureReason || 'فشلت عملية الدفع',
-        });
+        if (transaction.courseId) {
+          const course = transaction.courseId as any;
+          await this.emailsService.sendPaymentFailure(user.email, {
+            studentName: user.fullName,
+            courseTitle: course.title,
+            reason: transaction.failureReason || 'فشلت عملية الدفع',
+          });
+        }
+        // TODO: Handle subscription payment failure email
       } catch (error) {
         console.error('[PaymentsService] Failed to send payment failure email:', error);
       }

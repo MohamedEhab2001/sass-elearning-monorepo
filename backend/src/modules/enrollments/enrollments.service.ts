@@ -5,6 +5,7 @@ import { Enrollment, EnrollmentDocument, EnrollmentStatus } from './schemas/enro
 import { Course, CourseDocument, CourseStatus } from '../courses/schemas/course.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { EmailsService } from '../emails/emails.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { CreateEnrollmentDto } from './dto/enrollment.dto';
 import { ConfigService } from '@nestjs/config';
 
@@ -15,6 +16,7 @@ export class EnrollmentsService {
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private emailsService: EmailsService,
+    private subscriptionsService: SubscriptionsService,
     private configService: ConfigService,
   ) {}
 
@@ -191,9 +193,10 @@ export class EnrollmentsService {
   }
 
   /**
-   * Check if student is enrolled in a course
+   * Check if student has access to a course (either enrolled or has active subscription)
    */
-  async isEnrolled(courseId: string, studentId: string): Promise<boolean> {
+  async isEnrolled(courseId: string, studentId: string, tenantId?: string): Promise<boolean> {
+    // Check direct enrollment
     const enrollment = await this.enrollmentModel
       .findOne({
         courseId: new Types.ObjectId(courseId),
@@ -202,7 +205,30 @@ export class EnrollmentsService {
       })
       .exec();
 
-    return !!enrollment;
+    if (enrollment) {
+      return true;
+    }
+
+    // If tenantId is provided, check for active subscription
+    if (tenantId) {
+      const hasActiveSubscription = await this.subscriptionsService.hasActiveSubscription(
+        studentId,
+        tenantId,
+      );
+
+      if (hasActiveSubscription) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if student has access to a course (alias for isEnrolled with tenantId)
+   */
+  async hasAccessToCourse(courseId: string, studentId: string, tenantId: string): Promise<boolean> {
+    return this.isEnrolled(courseId, studentId, tenantId);
   }
 
   /**

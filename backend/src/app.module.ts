@@ -14,6 +14,8 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { DiscountsModule } from './modules/discounts/discounts.module';
 import { UiConfigModule } from './modules/ui-config/ui-config.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
@@ -52,6 +54,8 @@ import { HealthModule } from './modules/health/health.module';
     EnrollmentsModule,
     ProgressModule,
     PaymentsModule,
+    SubscriptionsModule,
+    DiscountsModule,
     UiConfigModule,
     AdminModule,
     HealthModule,

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsBoolean, IsNumber, Min } from 'class-validator';
 
 export class CreateTenantDto {
   @IsString({ message: 'اسم الأكاديمية مطلوب' })
@@ -44,4 +44,18 @@ export class UpdateTenantDto {
     primary?: string;
     secondary?: string;
   };
+
+  @IsOptional()
+  @IsBoolean({ message: 'حالة تفعيل الاشتراكات يجب أن تكون true أو false' })
+  subscriptionEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'سعر الاشتراك الشهري يجب أن يكون رقماً' })
+  @Min(0, { message: 'سعر الاشتراك الشهري يجب أن يكون صفر أو أكثر' })
+  monthlyPrice?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'سعر الاشتراك السنوي يجب أن يكون رقماً' })
+  @Min(0, { message: 'سعر الاشتراك السنوي يجب أن يكون صفر أو أكثر' })
+  annualPrice?: number;
 }

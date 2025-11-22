@@ -6,6 +6,7 @@ import { Enrollment, EnrollmentSchema } from './schemas/enrollment.schema';
 import { Course, CourseSchema } from '../courses/schemas/course.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { EmailsModule } from '../emails/emails.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { EmailsModule } from '../emails/emails.module';
       { name: User.name, schema: UserSchema },
     ]),
     EmailsModule,
+    SubscriptionsModule,
   ],
   controllers: [EnrollmentsController],
   providers: [EnrollmentsService],

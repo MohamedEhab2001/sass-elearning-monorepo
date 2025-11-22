@@ -25,8 +25,11 @@ export class Transaction {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Course', required: true, index: true })
-  courseId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Course', default: null, index: true })
+  courseId: Types.ObjectId | null;
+
+  @Prop({ type: Types.ObjectId, ref: 'Subscription', default: null, index: true })
+  subscriptionId: Types.ObjectId | null;
 
   @Prop({ type: String, enum: PaymentProvider, required: true })
   provider: PaymentProvider;
@@ -39,6 +42,15 @@ export class Transaction {
 
   @Prop({ type: String, default: 'EGP' })
   currency: string;
+
+  @Prop({ type: String, default: null })
+  discountCode: string | null;
+
+  @Prop({ type: Number, default: 0 })
+  discountAmount: number;
+
+  @Prop({ type: Number, default: 0 })
+  originalAmount: number;
 
   @Prop({ type: String, required: true, unique: true })
   transactionId: string;
