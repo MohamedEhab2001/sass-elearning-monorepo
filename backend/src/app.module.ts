@@ -10,6 +10,7 @@ import { LessonsModule } from './modules/lessons/lessons.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { ProgressModule } from './modules/progress/progress.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ProgressModule } from './modules/progress/progress.module';
     UploadsModule,
     EnrollmentsModule,
     ProgressModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],
