@@ -50,6 +50,9 @@ export class User {
   @Prop({ default: null })
   lastLoginAt: Date | null;
 
+  @Prop({ type: Object, default: {} })
+  customFieldValues: Record<string, any>; // Custom field values for students
+
   @Prop()
   createdAt: Date;
 

@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsObject } from 'class-validator';
 
 export class SignupDto {
   @IsEmail({}, { message: 'البريد الإلكتروني غير صحيح' })
@@ -25,6 +25,29 @@ export class SignupDto {
   @IsString({ message: 'رابط الأكاديمية مطلوب' })
   @IsNotEmpty({ message: 'رابط الأكاديمية مطلوب' })
   academySlug: string;
+}
+
+export class StudentSignupDto {
+  @IsEmail({}, { message: 'البريد الإلكتروني غير صحيح' })
+  @IsNotEmpty({ message: 'البريد الإلكتروني مطلوب' })
+  email: string;
+
+  @IsString({ message: 'كلمة المرور يجب أن تكون نصاً' })
+  @MinLength(8, { message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' })
+  @IsNotEmpty({ message: 'كلمة المرور مطلوبة' })
+  password: string;
+
+  @IsString({ message: 'الاسم الأول مطلوب' })
+  @IsNotEmpty({ message: 'الاسم الأول مطلوب' })
+  firstName: string;
+
+  @IsString({ message: 'اسم العائلة مطلوب' })
+  @IsNotEmpty({ message: 'اسم العائلة مطلوب' })
+  lastName: string;
+
+  @IsOptional()
+  @IsObject({ message: 'القيم المخصصة يجب أن تكون كائناً' })
+  customFieldValues?: Record<string, any>;
 }
 
 export class LoginDto {

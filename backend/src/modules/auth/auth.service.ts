@@ -2,9 +2,10 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { TenantsService } from '../tenants/tenants.service';
+import { CustomFieldsService } from '../custom-fields/custom-fields.service';
 import { EmailsService } from '../emails/emails.service';
 import { UserRole } from '../users/schemas/user.schema';
-import { SignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
+import { SignupDto, StudentSignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private tenantsService: TenantsService,
+    private customFieldsService: CustomFieldsService,
     private jwtService: JwtService,
     private emailsService: EmailsService,
   ) {}
@@ -76,6 +78,64 @@ export class AuthService {
         id: tenant._id,
         name: tenant.name,
         slug: tenant.slug,
+      },
+      verificationToken, // For development only
+    };
+  }
+
+  async studentSignup(studentSignupDto: StudentSignupDto, tenantId: string) {
+    // Validate custom field values
+    if (studentSignupDto.customFieldValues) {
+      const validation = await this.customFieldsService.validateCustomFieldValues(
+        studentSignupDto.customFieldValues,
+        tenantId,
+      );
+
+      if (!validation.isValid) {
+        throw new ConflictException(validation.errors.join(', '));
+      }
+    }
+
+    // Create student user
+    const user = await this.usersService.create({
+      email: studentSignupDto.email,
+      password: studentSignupDto.password,
+      firstName: studentSignupDto.firstName,
+      lastName: studentSignupDto.lastName,
+      role: UserRole.STUDENT,
+      tenantId,
+      customFieldValues: studentSignupDto.customFieldValues || {},
+    });
+
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await this.usersService.setEmailVerificationToken(user._id, verificationToken);
+
+    // Send verification email
+    try {
+      await this.emailsService.sendVerificationEmail(user.email, verificationToken);
+    } catch (error) {
+      console.error('[AuthService] Failed to send verification email:', error);
+    }
+
+    // Generate JWT
+    const payload = {
+      sub: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      tenantId: tenantId,
+    };
+
+    return {
+      accessToken: this.jwtService.sign(payload),
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        tenantId: user.tenantId,
+        isEmailVerified: user.isEmailVerified,
       },
       verificationToken, // For development only
     };

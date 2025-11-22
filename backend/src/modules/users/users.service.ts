@@ -46,6 +46,53 @@ export class UsersService {
     return this.userModel.find({ tenantId }).select('-password').exec();
   }
 
+  /**
+   * Find students with filters including custom fields
+   */
+  async findStudentsWithFilters(
+    tenantId: string,
+    filters: {
+      searchTerm?: string;
+      role?: string;
+      customFields?: Record<string, any>;
+    },
+  ): Promise<UserDocument[]> {
+    const query: any = {
+      tenantId: new Types.ObjectId(tenantId),
+    };
+
+    // Filter by role (default to students)
+    if (filters.role) {
+      query.role = filters.role;
+    } else {
+      query.role = 'student';
+    }
+
+    // Search by name or email
+    if (filters.searchTerm) {
+      query.$or = [
+        { firstName: { $regex: filters.searchTerm, $options: 'i' } },
+        { lastName: { $regex: filters.searchTerm, $options: 'i' } },
+        { email: { $regex: filters.searchTerm, $options: 'i' } },
+      ];
+    }
+
+    // Filter by custom fields
+    if (filters.customFields) {
+      for (const [fieldName, fieldValue] of Object.entries(filters.customFields)) {
+        if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+          query[`customFieldValues.${fieldName}`] = fieldValue;
+        }
+      }
+    }
+
+    return this.userModel
+      .find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   async update(id: string | Types.ObjectId, updateUserDto: UpdateUserDto): Promise<UserDocument> {
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt(10);

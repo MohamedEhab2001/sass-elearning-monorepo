@@ -1,7 +1,7 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { SignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './dto/auth.dto';
+import { SignupDto, StudentSignupDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './dto/auth.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -13,6 +13,15 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 signups per hour
   async signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
+  }
+
+  @Post('student-signup/:tenantId')
+  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // 10 student signups per hour
+  async studentSignup(
+    @Param('tenantId') tenantId: string,
+    @Body() studentSignupDto: StudentSignupDto,
+  ) {
+    return this.authService.studentSignup(studentSignupDto, tenantId);
   }
 
   @Post('login')
