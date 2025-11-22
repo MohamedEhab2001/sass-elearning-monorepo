@@ -1,0 +1,13 @@
+{
+  "name": "@academy/shared",
+  "version": "1.0.0",
+  "description": "Shared types, constants, and translations for Academy Platform",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
