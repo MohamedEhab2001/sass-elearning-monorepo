@@ -24,6 +24,52 @@ export class EmailsService {
 
     // Set templates path
     this.templatesPath = path.join(__dirname, 'templates');
+
+    // Register Handlebars helpers for formatting
+    this.registerHandlebarsHelpers();
+  }
+
+  /**
+   * Register Handlebars helpers for consistent formatting
+   */
+  private registerHandlebarsHelpers(): void {
+    // Currency formatter
+    handlebars.registerHelper('formatCurrency', (amount: number) => {
+      return new Intl.NumberFormat('ar-EG', {
+        style: 'currency',
+        currency: 'EGP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    });
+
+    // Date formatter
+    handlebars.registerHelper('formatDate', (date: Date | string) => {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return new Intl.DateTimeFormat('ar-EG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }).format(dateObj);
+    });
+
+    // Number formatter
+    handlebars.registerHelper('formatNumber', (value: number, decimals?: number) => {
+      return new Intl.NumberFormat('ar-EG', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).format(value);
+    });
+
+    // Conditional helper (if equals)
+    handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
+      return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+    });
+
+    // Current year helper
+    handlebars.registerHelper('currentYear', () => {
+      return new Date().getFullYear();
+    });
   }
 
   /**
