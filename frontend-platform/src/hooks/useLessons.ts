@@ -6,7 +6,7 @@ import {
   ILessonUpdate,
   ILessonReorder,
 } from '@academy/shared/types';
-import { useAuth } from '@/stores/auth-store';
+import { useAuth } from '@/contexts/auth-context';
 
 const LESSONS_KEY = 'lessons';
 
