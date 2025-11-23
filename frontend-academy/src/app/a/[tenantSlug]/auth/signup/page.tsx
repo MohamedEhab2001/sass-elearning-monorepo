@@ -46,7 +46,7 @@ export default function SignupPage({ params }: { params: Promise<{ tenantSlug: s
     if (!tenant?._id) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/custom-fields/${tenant._id}/active`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/custom-fields/${tenant._id}/active`);
       const data = await response.json();
       setCustomFields(data.sort((a: CustomField, b: CustomField) => a.order - b.order));
     } catch (error) {
