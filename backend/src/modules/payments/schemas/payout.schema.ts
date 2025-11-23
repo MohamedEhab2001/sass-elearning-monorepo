@@ -49,22 +49,22 @@ export class Payout {
     [key: string]: any;
   };
 
-  @Prop({ trim: true, default: null })
+  @Prop({ type: String, trim: true, default: null })
   notes: string | null;
 
-  @Prop({ trim: true, default: null })
+  @Prop({ type: String, trim: true, default: null })
   rejectionReason: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   processedAt: Date | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   completedAt: Date | null;
 
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   processedBy: Types.ObjectId | null;
 
-  @Prop({ trim: true, default: null })
+  @Prop({ type: String, trim: true, default: null })
   transactionReference: string | null;
 
   @Prop()

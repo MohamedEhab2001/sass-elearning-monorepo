@@ -18,10 +18,10 @@ export class Exam {
   @Prop({ required: true })
   description: string;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   instructions: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   duration: number | null; // Duration in minutes
 
   @Prop({ required: true, min: 0, max: 100, default: 60 })
@@ -41,7 +41,7 @@ export class Exam {
   @Prop({ default: true })
   allowRetake: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   maxAttempts: number | null;
 
   @Prop({ default: false })

@@ -25,11 +25,11 @@ export class Question {
   @Prop({ type: [String], default: [] })
   options: string[];
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   correctAnswer: number | null; // Index of correct option
 
   // For Essay
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   rubric: string | null; // Grading rubric for instructors
 
   @Prop()

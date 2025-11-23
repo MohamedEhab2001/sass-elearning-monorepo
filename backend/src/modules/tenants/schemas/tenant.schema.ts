@@ -20,13 +20,13 @@ export class Tenant {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   ownerId: Types.ObjectId;
 
-  @Prop({ trim: true, default: null })
+  @Prop({ type: String, trim: true, default: null })
   description: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   logo: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   favicon: string | null;
 
   @Prop({ type: Object, default: { primary: '#3B82F6', secondary: '#8B5CF6' } })
@@ -38,13 +38,13 @@ export class Tenant {
   @Prop({ default: 'Cairo' })
   fontFamily: string;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   email: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   phone: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   address: string | null;
 
   @Prop({ type: Object, default: {} })
@@ -59,13 +59,13 @@ export class Tenant {
   @Prop({ default: false })
   subscriptionEnabled: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   monthlyPrice: number | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   annualPrice: number | null;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   customDomain: string | null;
 
   @Prop({ default: false })
@@ -83,7 +83,7 @@ export class Tenant {
   @Prop({ required: true, enum: TenantStatus, default: TenantStatus.ACTIVE })
   status: TenantStatus;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   suspensionReason: string | null;
 
   @Prop()

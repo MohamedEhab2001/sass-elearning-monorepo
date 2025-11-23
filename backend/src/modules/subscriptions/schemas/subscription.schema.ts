@@ -44,10 +44,10 @@ export class Subscription {
   @Prop({ default: true })
   autoRenew: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   paymentId: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   cancelledAt: Date | null;
 
   @Prop()

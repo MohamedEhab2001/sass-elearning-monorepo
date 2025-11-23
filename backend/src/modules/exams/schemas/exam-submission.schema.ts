@@ -35,10 +35,10 @@ export class ExamSubmission {
   passed: boolean;
 
   // Grading
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   autoGradedAt: Date | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   manuallyGradedAt: Date | null;
 
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
@@ -48,10 +48,10 @@ export class ExamSubmission {
   @Prop({ required: true })
   startedAt: Date;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   submittedAt: Date | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   timeSpent: number | null; // In seconds
 
   @Prop({ required: true, default: 1 })

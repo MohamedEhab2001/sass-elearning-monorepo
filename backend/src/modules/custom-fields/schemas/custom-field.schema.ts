@@ -32,7 +32,7 @@ export class CustomField {
   @Prop({ default: false })
   required: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   placeholder: string | null;
 
   @Prop({ required: true, default: 0 })

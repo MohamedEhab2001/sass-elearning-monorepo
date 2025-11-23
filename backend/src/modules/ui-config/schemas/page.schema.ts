@@ -39,7 +39,7 @@ export class Page {
   @Prop({ required: true, trim: true })
   path: string; // URL path (e.g., "/", "/about", "/contact")
 
-  @Prop({ trim: true, default: null })
+  @Prop({ type: String, trim: true, default: null })
   description: string | null; // Meta description for SEO
 
   @Prop({ type: String, enum: PageStatus, default: PageStatus.DRAFT })
@@ -48,7 +48,7 @@ export class Page {
   @Prop({ type: [PageSectionSchema], default: [] })
   sections: PageSection[];
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   publishedAt: Date | null;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })

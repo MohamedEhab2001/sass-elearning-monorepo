@@ -34,22 +34,22 @@ export class User {
   @Prop({ default: false })
   isEmailVerified: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   emailVerificationToken: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   emailVerificationExpires: Date | null;
 
-  @Prop({ default: null })
+  @Prop({ type: String, default: null })
   passwordResetToken: string | null;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   passwordResetExpires: Date | null;
 
   @Prop({ default: true })
   isActive: boolean;
 
-  @Prop({ default: null })
+  @Prop({ type: Date, default: null })
   lastLoginAt: Date | null;
 
   @Prop({ type: Object, default: {} })

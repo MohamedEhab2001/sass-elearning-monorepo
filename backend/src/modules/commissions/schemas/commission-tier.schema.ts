@@ -17,7 +17,7 @@ export class CommissionTier {
   @Prop({ required: true, min: 0, default: 0 })
   minRevenue: number; // Minimum revenue to qualify for this tier
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   maxRevenue: number | null; // Maximum revenue (null for highest tier)
 
   @Prop({ required: true, min: 0, max: 100 })

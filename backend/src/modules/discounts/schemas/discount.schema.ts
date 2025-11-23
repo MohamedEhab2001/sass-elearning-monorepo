@@ -34,7 +34,7 @@ export class Discount {
   @Prop({ type: [Types.ObjectId], ref: 'Course', default: [] })
   specificCourseIds: Types.ObjectId[];
 
-  @Prop({ default: null })
+  @Prop({ type: Number, default: null })
   maxUses: number | null; // null = unlimited
 
   @Prop({ default: 0 })
