@@ -230,8 +230,8 @@ export class CommissionsService {
       totalRevenue,
       totalCommission,
       netRevenue: totalRevenue - totalCommission,
-      currentTier: currentTier ? currentTier.toObject() : null,
-      nextTier: nextTier ? nextTier.toObject() : null,
+      currentTier: currentTier ? (currentTier as any) : undefined,
+      nextTier: nextTier ? (nextTier as any) : undefined,
       progressToNextTier,
     };
   }

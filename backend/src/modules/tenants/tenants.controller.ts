@@ -1,6 +1,7 @@
 import { Controller, Get, Put, Delete, Param, Body } from '@nestjs/common';
 import { TenantsService } from './tenants.service';
 import { UpdateTenantDto } from './dto/tenant.dto';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('tenants')
 export class TenantsController {

@@ -12,9 +12,10 @@ import {
 } from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto, UpdateLessonDto, ReorderLessonsDto } from './dto/lesson.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('lessons')
 @UseGuards(JwtAuthGuard)
@@ -27,11 +28,11 @@ export class LessonsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('instructor', 'admin')
-  async create(@Body() createLessonDto: CreateLessonDto, @Request() req) {
+  async create(@Body() createLessonDto: CreateLessonDto, @Request() req: AuthenticatedRequest) {
     return this.lessonsService.create(
       createLessonDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -41,7 +42,7 @@ export class LessonsController {
   @Get('course/:courseId')
   async findAllByCourse(
     @Param('courseId') courseId: string,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Query('includeUnpublished') includeUnpublished?: string,
   ) {
     // Only instructors can see unpublished lessons
@@ -50,7 +51,7 @@ export class LessonsController {
 
     return this.lessonsService.findAllByCourse(
       courseId,
-      req.user.tenantId,
+      req.user.tenantId!,
       showUnpublished,
     );
   }
@@ -59,8 +60,8 @@ export class LessonsController {
    * Get a single lesson by ID
    */
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
-    return this.lessonsService.findOne(id, req.user.tenantId);
+  async findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.lessonsService.findOne(id, req.user.tenantId!);
   }
 
   /**
@@ -72,13 +73,13 @@ export class LessonsController {
   async update(
     @Param('id') id: string,
     @Body() updateLessonDto: UpdateLessonDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.lessonsService.update(
       id,
       updateLessonDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -88,11 +89,11 @@ export class LessonsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('instructor', 'admin')
-  async delete(@Param('id') id: string, @Request() req) {
+  async delete(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.lessonsService.delete(
       id,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -102,11 +103,11 @@ export class LessonsController {
   @Put('reorder')
   @UseGuards(RolesGuard)
   @Roles('instructor', 'admin')
-  async reorder(@Body() reorderDto: ReorderLessonsDto, @Request() req) {
+  async reorder(@Body() reorderDto: ReorderLessonsDto, @Request() req: AuthenticatedRequest) {
     return this.lessonsService.reorder(
       reorderDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -114,9 +115,9 @@ export class LessonsController {
    * Get lesson count for a course
    */
   @Get('course/:courseId/count')
-  async getCount(@Param('courseId') courseId: string, @Request() req) {
+  async getCount(@Param('courseId') courseId: string, @Request() req: AuthenticatedRequest) {
     return {
-      count: await this.lessonsService.getCountByCourse(courseId, req.user.tenantId),
+      count: await this.lessonsService.getCountByCourse(courseId, req.user.tenantId!),
     };
   }
 
@@ -124,11 +125,11 @@ export class LessonsController {
    * Get total duration for a course
    */
   @Get('course/:courseId/duration')
-  async getTotalDuration(@Param('courseId') courseId: string, @Request() req) {
+  async getTotalDuration(@Param('courseId') courseId: string, @Request() req: AuthenticatedRequest) {
     return {
       totalDuration: await this.lessonsService.getTotalDurationByCourse(
         courseId,
-        req.user.tenantId,
+        req.user.tenantId!,
       ),
     };
   }
@@ -139,11 +140,11 @@ export class LessonsController {
   @Post(':id/complete')
   @UseGuards(RolesGuard)
   @Roles('student')
-  async markCompleted(@Param('id') id: string, @Request() req) {
+  async markCompleted(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.lessonsService.markCompleted(
       id,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 }

@@ -13,9 +13,10 @@ import {
 } from '@nestjs/common';
 import { UiConfigService } from './ui-config.service';
 import { CreatePageDto, UpdatePageDto, UpdatePageSectionsDto, PublishPageDto } from './dto/page.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('ui-config')
 export class UiConfigController {
@@ -29,11 +30,11 @@ export class UiConfigController {
   @Post('pages')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'instructor')
-  async createPage(@Body() createPageDto: CreatePageDto, @Request() req) {
+  async createPage(@Body() createPageDto: CreatePageDto, @Request() req: AuthenticatedRequest) {
     return this.uiConfigService.createPage(
       createPageDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -43,8 +44,8 @@ export class UiConfigController {
   @Get('pages')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'instructor')
-  async getPages(@Request() req) {
-    return this.uiConfigService.getPages(req.user.tenantId);
+  async getPages(@Request() req: AuthenticatedRequest) {
+    return this.uiConfigService.getPages(req.user.tenantId!);
   }
 
   /**
@@ -53,8 +54,8 @@ export class UiConfigController {
   @Get('pages/:pageId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'instructor')
-  async getPageById(@Param('pageId') pageId: string, @Request() req) {
-    return this.uiConfigService.getPageById(pageId, req.user.tenantId);
+  async getPageById(@Param('pageId') pageId: string, @Request() req: AuthenticatedRequest) {
+    return this.uiConfigService.getPageById(pageId, req.user.tenantId!);
   }
 
   /**
@@ -66,13 +67,13 @@ export class UiConfigController {
   async updatePage(
     @Param('pageId') pageId: string,
     @Body() updatePageDto: UpdatePageDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.uiConfigService.updatePage(
       pageId,
       updatePageDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -85,13 +86,13 @@ export class UiConfigController {
   async updatePageSections(
     @Param('pageId') pageId: string,
     @Body() updateSectionsDto: UpdatePageSectionsDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.uiConfigService.updatePageSections(
       pageId,
       updateSectionsDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -104,13 +105,13 @@ export class UiConfigController {
   async publishPage(
     @Param('pageId') pageId: string,
     @Body() publishPageDto: PublishPageDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.uiConfigService.publishPage(
       pageId,
       publishPageDto.status,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -121,8 +122,8 @@ export class UiConfigController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'instructor')
   @HttpCode(204)
-  async deletePage(@Param('pageId') pageId: string, @Request() req) {
-    await this.uiConfigService.deletePage(pageId, req.user.tenantId);
+  async deletePage(@Param('pageId') pageId: string, @Request() req: AuthenticatedRequest) {
+    await this.uiConfigService.deletePage(pageId, req.user.tenantId!);
   }
 
   /**
@@ -131,11 +132,11 @@ export class UiConfigController {
   @Post('pages/:pageId/duplicate')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'instructor')
-  async duplicatePage(@Param('pageId') pageId: string, @Request() req) {
+  async duplicatePage(@Param('pageId') pageId: string, @Request() req: AuthenticatedRequest) {
     return this.uiConfigService.duplicatePage(
       pageId,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 }

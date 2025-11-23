@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsBoolean, IsEnum, IsOptional, IsMongoId, MinLength, Min } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsEnum, IsOptional, IsMongoId, IsArray, MinLength, Min } from 'class-validator';
 import { LessonType } from '../schemas/lesson.schema';
 
 export class CreateLessonDto {

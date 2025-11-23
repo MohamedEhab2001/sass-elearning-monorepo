@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import { transports, format } from 'winston';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';

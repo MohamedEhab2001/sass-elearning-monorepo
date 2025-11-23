@@ -97,8 +97,13 @@ export class LessonsService {
     // Verify course ownership
     await this.verifyCourseOwnership(lesson.courseId.toString(), instructorId, tenantId);
 
-    Object.assign(lesson, updateLessonDto);
-    return lesson.save();
+    return this.lessonModel
+      .findByIdAndUpdate(
+        (lesson as any)._id,
+        { $set: updateLessonDto },
+        { new: true },
+      )
+      .exec() as Promise<Lesson>;
   }
 
   /**
@@ -110,7 +115,7 @@ export class LessonsService {
     // Verify course ownership
     await this.verifyCourseOwnership(lesson.courseId.toString(), instructorId, tenantId);
 
-    await this.lessonModel.deleteOne({ _id: lesson._id }).exec();
+    await this.lessonModel.deleteOne({ _id: (lesson as any)._id }).exec();
 
     // Reorder remaining lessons
     await this.reorderAfterDelete(lesson.courseId.toString(), lesson.order);

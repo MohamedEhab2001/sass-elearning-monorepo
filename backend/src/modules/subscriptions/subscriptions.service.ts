@@ -137,19 +137,27 @@ export class SubscriptionsService {
   ): Promise<Subscription> {
     const subscription = await this.getById(subscriptionId, studentId, tenantId);
 
+    const updateData: any = {};
+
     if (updateSubscriptionDto.autoRenew !== undefined) {
-      subscription.autoRenew = updateSubscriptionDto.autoRenew;
+      updateData.autoRenew = updateSubscriptionDto.autoRenew;
     }
 
     if (updateSubscriptionDto.status !== undefined) {
-      subscription.status = updateSubscriptionDto.status;
+      updateData.status = updateSubscriptionDto.status;
 
       if (updateSubscriptionDto.status === SubscriptionStatus.CANCELLED) {
-        subscription.cancelledAt = new Date();
+        updateData.cancelledAt = new Date();
       }
     }
 
-    return subscription.save();
+    return this.subscriptionModel
+      .findByIdAndUpdate(
+        (subscription as any)._id,
+        { $set: updateData },
+        { new: true },
+      )
+      .exec() as Promise<Subscription>;
   }
 
   /**
@@ -162,11 +170,19 @@ export class SubscriptionsService {
       throw new BadRequestException('لا يمكن إلغاء هذا الاشتراك');
     }
 
-    subscription.status = SubscriptionStatus.CANCELLED;
-    subscription.autoRenew = false;
-    subscription.cancelledAt = new Date();
-
-    return subscription.save();
+    return this.subscriptionModel
+      .findByIdAndUpdate(
+        (subscription as any)._id,
+        {
+          $set: {
+            status: SubscriptionStatus.CANCELLED,
+            autoRenew: false,
+            cancelledAt: new Date(),
+          },
+        },
+        { new: true },
+      )
+      .exec() as Promise<Subscription>;
   }
 
   /**
@@ -183,17 +199,30 @@ export class SubscriptionsService {
       throw new BadRequestException('انتهت صلاحية الاشتراك، يرجى الاشتراك مجدداً');
     }
 
-    subscription.status = SubscriptionStatus.ACTIVE;
-    subscription.autoRenew = true;
-    subscription.cancelledAt = null;
-
-    return subscription.save();
+    return this.subscriptionModel
+      .findByIdAndUpdate(
+        (subscription as any)._id,
+        {
+          $set: {
+            status: SubscriptionStatus.ACTIVE,
+            autoRenew: true,
+            cancelledAt: null,
+          },
+        },
+        { new: true },
+      )
+      .exec() as Promise<Subscription>;
   }
 
   /**
    * Activate subscription after payment
    */
-  async activateAfterPayment(subscriptionId: string, paymentId: string): Promise<Subscription> {
+  async activateAfterPayment(
+    subscriptionId: string,
+    paymentId: string,
+    studentId?: string,
+    tenantId?: string,
+  ): Promise<Subscription> {
     const subscription = await this.subscriptionModel
       .findById(new Types.ObjectId(subscriptionId))
       .exec();
@@ -202,10 +231,18 @@ export class SubscriptionsService {
       throw new NotFoundException('الاشتراك غير موجود');
     }
 
-    subscription.status = SubscriptionStatus.ACTIVE;
-    subscription.paymentId = paymentId;
-
-    return subscription.save();
+    return this.subscriptionModel
+      .findByIdAndUpdate(
+        (subscription as any)._id,
+        {
+          $set: {
+            status: SubscriptionStatus.ACTIVE,
+            paymentId,
+          },
+        },
+        { new: true },
+      )
+      .exec() as Promise<Subscription>;
   }
 
   /**

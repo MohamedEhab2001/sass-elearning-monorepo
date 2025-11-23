@@ -9,6 +9,7 @@ import {
 import { CoursesService } from './courses.service';
 import { CourseStatus } from './schemas/course.schema';
 import { TenantsService } from '../tenants/tenants.service';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('public/courses')
 export class PublicCoursesController {

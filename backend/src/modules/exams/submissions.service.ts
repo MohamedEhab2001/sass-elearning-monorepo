@@ -133,7 +133,8 @@ export class SubmissionsService {
       };
 
       if (question.questionType === QuestionType.MCQ) {
-        processedAnswer.selectedOption = answer.selectedOption;
+        processedAnswer.selectedOption = answer.selectedOption ? String(answer.selectedOption) : undefined;
+        processedAnswer.answer = answer.selectedOption ? String(answer.selectedOption) : undefined;
 
         // Auto-grade MCQ
         const isCorrect = answer.selectedOption === question.correctAnswer;
@@ -143,6 +144,7 @@ export class SubmissionsService {
         totalPoints += processedAnswer.points;
       } else if (question.questionType === QuestionType.ESSAY) {
         processedAnswer.essayText = answer.essayText;
+        processedAnswer.answer = answer.essayText || '';
         // Essay will be graded manually later
         processedAnswer.points = 0;
       }
@@ -167,7 +169,7 @@ export class SubmissionsService {
     submission.percentage = percentage;
     submission.passed = passed;
     submission.submittedAt = new Date();
-    submission.timeSpent = timeSpent;
+    submission.timeSpent = timeSpent || null;
 
     if (hasEssay) {
       // Needs manual grading

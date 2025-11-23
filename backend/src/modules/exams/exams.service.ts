@@ -131,7 +131,7 @@ export class ExamsService {
 
     // All rules must pass (AND logic)
     for (const rule of exam.visibilityRules) {
-      const fieldValue = studentCustomFields[rule.customFieldName];
+      const fieldValue = studentCustomFields[rule.customFieldName!];
 
       if (!this.evaluateRule(fieldValue, rule)) {
         return false;

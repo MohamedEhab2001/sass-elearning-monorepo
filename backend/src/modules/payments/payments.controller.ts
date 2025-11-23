@@ -13,9 +13,10 @@ import {
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, PaymobCallbackDto } from './dto/payment.dto';
 import { CreatePayoutDto, UpdatePayoutStatusDto } from './dto/payout.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('payments')
 export class PaymentsController {
@@ -27,11 +28,11 @@ export class PaymentsController {
   @Post('create')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('student')
-  async createPayment(@Body() createPaymentDto: CreatePaymentDto, @Request() req) {
+  async createPayment(@Body() createPaymentDto: CreatePaymentDto, @Request() req: AuthenticatedRequest) {
     return this.paymentsService.createPaymentSession(
       createPaymentDto.courseId,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -50,7 +51,7 @@ export class PaymentsController {
    */
   @Get('transaction/:transactionId')
   @UseGuards(JwtAuthGuard)
-  async getTransaction(@Param('transactionId') transactionId: string, @Request() req) {
+  async getTransaction(@Param('transactionId') transactionId: string, @Request() req: AuthenticatedRequest) {
     return this.paymentsService.getTransaction(transactionId, req.user.userId);
   }
 
@@ -60,8 +61,8 @@ export class PaymentsController {
   @Get('my-transactions')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('student')
-  async getMyTransactions(@Request() req) {
-    return this.paymentsService.getUserTransactions(req.user.userId, req.user.tenantId);
+  async getMyTransactions(@Request() req: AuthenticatedRequest) {
+    return this.paymentsService.getUserTransactions(req.user.userId, req.user.tenantId!);
   }
 
   /**
@@ -70,8 +71,8 @@ export class PaymentsController {
   @Get('course/:courseId/transactions')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('instructor', 'admin')
-  async getCourseTransactions(@Param('courseId') courseId: string, @Request() req) {
-    return this.paymentsService.getCourseTransactions(courseId, req.user.tenantId);
+  async getCourseTransactions(@Param('courseId') courseId: string, @Request() req: AuthenticatedRequest) {
+    return this.paymentsService.getCourseTransactions(courseId, req.user.tenantId!);
   }
 
   // ==================== FINANCE & PAYOUT ENDPOINTS ====================
@@ -82,10 +83,10 @@ export class PaymentsController {
   @Get('finance/summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('instructor')
-  async getRevenueSummary(@Request() req) {
+  async getRevenueSummary(@Request() req: AuthenticatedRequest) {
     return this.paymentsService.getInstructorRevenueSummary(
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -95,10 +96,10 @@ export class PaymentsController {
   @Get('finance/transactions')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('instructor')
-  async getInstructorTransactions(@Request() req) {
+  async getInstructorTransactions(@Request() req: AuthenticatedRequest) {
     return this.paymentsService.getInstructorTransactions(
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -108,11 +109,11 @@ export class PaymentsController {
   @Post('finance/payouts')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('instructor')
-  async createPayoutRequest(@Body() createPayoutDto: CreatePayoutDto, @Request() req) {
+  async createPayoutRequest(@Body() createPayoutDto: CreatePayoutDto, @Request() req: AuthenticatedRequest) {
     return this.paymentsService.createPayoutRequest(
       createPayoutDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -122,10 +123,10 @@ export class PaymentsController {
   @Get('finance/payouts')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('instructor')
-  async getInstructorPayouts(@Request() req) {
+  async getInstructorPayouts(@Request() req: AuthenticatedRequest) {
     return this.paymentsService.getInstructorPayouts(
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -135,11 +136,11 @@ export class PaymentsController {
   @Patch('finance/payouts/:payoutId/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('instructor')
-  async cancelPayoutRequest(@Param('payoutId') payoutId: string, @Request() req) {
+  async cancelPayoutRequest(@Param('payoutId') payoutId: string, @Request() req: AuthenticatedRequest) {
     return this.paymentsService.cancelPayoutRequest(
       payoutId,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -151,8 +152,8 @@ export class PaymentsController {
   @Get('admin/payouts/pending')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  async getPendingPayouts(@Request() req) {
-    return this.paymentsService.getPendingPayouts(req.user.tenantId);
+  async getPendingPayouts(@Request() req: AuthenticatedRequest) {
+    return this.paymentsService.getPendingPayouts(req.user.tenantId!);
   }
 
   /**
@@ -161,8 +162,8 @@ export class PaymentsController {
   @Get('admin/payouts')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  async getAllPayouts(@Request() req) {
-    return this.paymentsService.getAllPayouts(req.user.tenantId);
+  async getAllPayouts(@Request() req: AuthenticatedRequest) {
+    return this.paymentsService.getAllPayouts(req.user.tenantId!);
   }
 
   /**
@@ -174,13 +175,13 @@ export class PaymentsController {
   async updatePayoutStatus(
     @Param('payoutId') payoutId: string,
     @Body() updatePayoutStatusDto: UpdatePayoutStatusDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.paymentsService.updatePayoutStatus(
       payoutId,
       updatePayoutStatusDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 }

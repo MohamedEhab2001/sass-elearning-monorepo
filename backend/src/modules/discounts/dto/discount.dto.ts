@@ -33,9 +33,36 @@ export class CreateDiscountDto {
 
 export class UpdateDiscountDto {
   @IsOptional()
+  @IsEnum(DiscountType, { message: 'نوع الخصم غير صحيح' })
+  discountType?: DiscountType;
+
+  @IsOptional()
   @IsNumber({}, { message: 'قيمة الخصم يجب أن تكون رقماً' })
   @Min(0, { message: 'قيمة الخصم يجب أن تكون صفر أو أكثر' })
   value?: number;
+
+  @IsOptional()
+  @IsEnum(DiscountApplicableTo, { message: 'مجال تطبيق الخصم غير صحيح' })
+  applicableTo?: DiscountApplicableTo;
+
+  @IsOptional()
+  @IsArray({ message: 'معرفات الدورات يجب أن تكون مصفوفة' })
+  courseIds?: string[];
+
+  @IsOptional()
+  @IsNumber({}, { message: 'الحد الأدنى للشراء يجب أن يكون رقماً' })
+  @Min(0, { message: 'الحد الأدنى للشراء يجب أن يكون صفر أو أكثر' })
+  minPurchaseAmount?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'الحد الأقصى للخصم يجب أن يكون رقماً' })
+  @Min(0, { message: 'الحد الأقصى للخصم يجب أن يكون صفر أو أكثر' })
+  maxDiscountAmount?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'الحد الأقصى للاستخدام يجب أن يكون رقماً' })
+  @Min(1, { message: 'الحد الأقصى للاستخدام يجب أن يكون 1 على الأقل' })
+  usageLimit?: number;
 
   @IsOptional()
   @IsNumber({}, { message: 'الحد الأقصى للاستخدام يجب أن يكون رقماً' })

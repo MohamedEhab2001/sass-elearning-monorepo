@@ -104,8 +104,7 @@ export class AuthService {
       lastName: studentSignupDto.lastName,
       role: UserRole.STUDENT,
       tenantId,
-      customFieldValues: studentSignupDto.customFieldValues || {},
-    });
+    } as any);
 
     // Generate email verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');

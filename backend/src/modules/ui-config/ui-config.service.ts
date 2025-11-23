@@ -112,10 +112,18 @@ export class UiConfigService {
       }
     }
 
-    Object.assign(page, updatePageDto);
-    page.lastModifiedBy = new Types.ObjectId(userId);
-
-    return page.save();
+    return this.pageModel
+      .findByIdAndUpdate(
+        (page as any)._id,
+        {
+          $set: {
+            ...updatePageDto,
+            lastModifiedBy: new Types.ObjectId(userId),
+          },
+        },
+        { new: true },
+      )
+      .exec() as Promise<Page>;
   }
 
   /**
@@ -129,10 +137,18 @@ export class UiConfigService {
   ): Promise<Page> {
     const page = await this.getPageById(pageId, tenantId);
 
-    page.sections = updateSectionsDto.sections;
-    page.lastModifiedBy = new Types.ObjectId(userId);
-
-    return page.save();
+    return this.pageModel
+      .findByIdAndUpdate(
+        (page as any)._id,
+        {
+          $set: {
+            sections: updateSectionsDto.sections,
+            lastModifiedBy: new Types.ObjectId(userId),
+          },
+        },
+        { new: true },
+      )
+      .exec() as Promise<Page>;
   }
 
   /**
@@ -146,14 +162,22 @@ export class UiConfigService {
   ): Promise<Page> {
     const page = await this.getPageById(pageId, tenantId);
 
-    page.status = status;
-    page.lastModifiedBy = new Types.ObjectId(userId);
+    const updateData: any = {
+      status,
+      lastModifiedBy: new Types.ObjectId(userId),
+    };
 
     if (status === PageStatus.PUBLISHED && !page.publishedAt) {
-      page.publishedAt = new Date();
+      updateData.publishedAt = new Date();
     }
 
-    return page.save();
+    return this.pageModel
+      .findByIdAndUpdate(
+        (page as any)._id,
+        { $set: updateData },
+        { new: true },
+      )
+      .exec() as Promise<Page>;
   }
 
   /**

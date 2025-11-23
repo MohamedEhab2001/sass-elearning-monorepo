@@ -1,5 +1,6 @@
 import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { UiConfigService } from './ui-config.service';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('public/ui-config')
 export class UiConfigPublicController {

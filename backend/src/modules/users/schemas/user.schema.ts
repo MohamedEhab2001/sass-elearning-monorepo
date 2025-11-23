@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export type UserDocument = User & Document;
+export type UserDocument = User & Document & {
+  fullName: string;
+};
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -61,6 +63,15 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Virtual property for fullName
+UserSchema.virtual('fullName').get(function (this: UserDocument) {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Ensure virtuals are included in JSON
+UserSchema.set('toJSON', { virtuals: true });
+UserSchema.set('toObject', { virtuals: true });
 
 // Indexes
 UserSchema.index({ email: 1 });

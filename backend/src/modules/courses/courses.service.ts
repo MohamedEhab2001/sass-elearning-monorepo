@@ -140,14 +140,19 @@ export class CoursesService {
     }
 
     // If title is being updated, regenerate slug
+    let updateData: any = { ...updateCourseDto };
     if (updateCourseDto.title && updateCourseDto.title !== course.title) {
       const newSlug = await this.generateUniqueSlug(updateCourseDto.title, tenantId);
-      Object.assign(course, updateCourseDto, { slug: newSlug });
-    } else {
-      Object.assign(course, updateCourseDto);
+      updateData.slug = newSlug;
     }
 
-    return course.save();
+    return this.courseModel
+      .findByIdAndUpdate(
+        (course as any)._id,
+        { $set: updateData },
+        { new: true },
+      )
+      .exec() as Promise<Course>;
   }
 
   /**
@@ -174,8 +179,13 @@ export class CoursesService {
       // Additional validation can be added here (e.g., must have at least one lesson)
     }
 
-    course.status = publishCourseDto.status;
-    return course.save();
+    return this.courseModel
+      .findByIdAndUpdate(
+        (course as any)._id,
+        { $set: { status: publishCourseDto.status } },
+        { new: true },
+      )
+      .exec() as Promise<Course>;
   }
 
   /**
@@ -192,14 +202,17 @@ export class CoursesService {
     // Check if course has enrollments
     if (course.enrollmentCount > 0) {
       // Archive instead of delete
-      course.status = CourseStatus.ARCHIVED;
-      course.isActive = false;
-      await course.save();
+      await this.courseModel
+        .updateOne(
+          { _id: (course as any)._id },
+          { $set: { status: CourseStatus.ARCHIVED, isActive: false } },
+        )
+        .exec();
       return { message: 'تم أرشفة الدورة بنجاح (لا يمكن حذف دورة بها طلاب مسجلين)' };
     }
 
     // If no enrollments, hard delete
-    await this.courseModel.deleteOne({ _id: course._id }).exec();
+    await this.courseModel.deleteOne({ _id: (course as any)._id }).exec();
     return { message: 'تم حذف الدورة بنجاح' };
   }
 
@@ -261,12 +274,12 @@ export class CoursesService {
       throw new NotFoundException('الدورة غير موجودة');
     }
 
-    const totalRatings = course.totalRatings + 1;
-    const averageRating = ((course.averageRating * course.totalRatings) + newRating) / totalRatings;
+    const totalRatings = (course as any).totalRatings + 1;
+    const averageRating = ((course.averageRating * (course as any).totalRatings) + newRating) / totalRatings;
 
     await this.courseModel
       .updateOne(
-        { _id: course._id },
+        { _id: (course as any)._id },
         {
           $set: {
             averageRating: Math.round(averageRating * 10) / 10,

@@ -6,6 +6,7 @@ import { Payout, PayoutDocument, PayoutStatus } from './schemas/payout.schema';
 import { Course, CourseDocument } from '../courses/schemas/course.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { Tenant, TenantDocument } from '../tenants/schemas/tenant.schema';
+import { SubscriptionPlan } from '../subscriptions/schemas/subscription.schema';
 import { PaymobService } from './paymob.service';
 import { EnrollmentsService } from '../enrollments/enrollments.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
@@ -105,7 +106,7 @@ export class PaymentsService {
         discountCodeUsed = discountCode;
 
         // Increment discount usage
-        await this.discountsService.incrementUsage(validation.discount._id, tenantId);
+        await this.discountsService.incrementUsage(validation.discount._id.toString());
       } else {
         throw new BadRequestException(validation.message || 'كود الخصم غير صالح');
       }
@@ -236,7 +237,7 @@ export class PaymentsService {
         discountCodeUsed = discountCode;
 
         // Increment discount usage
-        await this.discountsService.incrementUsage(validation.discount._id, tenantId);
+        await this.discountsService.incrementUsage(validation.discount._id.toString());
       } else {
         throw new BadRequestException(validation.message || 'كود الخصم غير صالح');
       }
@@ -244,7 +245,7 @@ export class PaymentsService {
 
     // Create pending subscription
     const pendingSubscription = await this.subscriptionsService.create(
-      { plan },
+      { plan: plan as SubscriptionPlan },
       userId,
       tenantId,
     );
@@ -254,7 +255,7 @@ export class PaymentsService {
     const transaction = new this.transactionModel({
       tenantId: new Types.ObjectId(tenantId),
       userId: new Types.ObjectId(userId),
-      subscriptionId: new Types.ObjectId(pendingSubscription._id),
+      subscriptionId: new Types.ObjectId((pendingSubscription as any)._id),
       provider: PaymentProvider.PAYMOB,
       status: TransactionStatus.PENDING,
       amount: finalAmount,
@@ -264,7 +265,7 @@ export class PaymentsService {
       currency: 'EGP',
       transactionId,
       metadata: {
-        subscriptionPlan: plan,
+        subscriptionPlan: plan as string,
         userEmail: user.email,
       },
     });
@@ -293,7 +294,7 @@ export class PaymentsService {
     transaction.metadata = {
       ...transaction.metadata,
       paymentToken: paymentSession.paymentToken,
-      subscriptionId: pendingSubscription._id.toString(),
+      subscriptionId: (pendingSubscription as any)._id.toString(),
     };
     await transaction.save();
 
@@ -726,21 +727,21 @@ export class PaymentsService {
         await this.emailsService.sendPayoutApproved(instructor.email, {
           instructorName: instructor.fullName,
           amount: savedPayout.amount,
-          approvalDate: savedPayout.processedAt,
+          approvalDate: savedPayout.processedAt || new Date(),
         });
       } else if (updatePayoutStatusDto.status === PayoutStatus.REJECTED) {
         await this.emailsService.sendPayoutRejected(instructor.email, {
           instructorName: instructor.fullName,
           amount: savedPayout.amount,
           reason: savedPayout.rejectionReason || 'لم يتم تحديد السبب',
-          rejectionDate: savedPayout.processedAt,
+          rejectionDate: savedPayout.processedAt || new Date(),
         });
       } else if (updatePayoutStatusDto.status === PayoutStatus.COMPLETED) {
         await this.emailsService.sendPayoutCompleted(instructor.email, {
           instructorName: instructor.fullName,
           amount: savedPayout.amount,
           transactionReference: savedPayout.transactionReference || 'N/A',
-          completionDate: savedPayout.completedAt,
+          completionDate: savedPayout.completedAt || new Date(),
         });
       }
     } catch (error) {

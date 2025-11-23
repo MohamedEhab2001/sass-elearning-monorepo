@@ -154,7 +154,6 @@ export class DomainsService {
 
     // Update subdomain
     existingSubdomain.subdomain = newSubdomain.toLowerCase();
-    existingSubdomain.updatedAt = new Date();
 
     return existingSubdomain.save();
   }

@@ -114,7 +114,25 @@ export class DiscountsService {
       throw new BadRequestException('تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية');
     }
 
-    return discount.save();
+    const updateData: any = {};
+    if (updateDiscountDto.discountType !== undefined) updateData.discountType = updateDiscountDto.discountType;
+    if (updateDiscountDto.value !== undefined) updateData.value = updateDiscountDto.value;
+    if (updateDiscountDto.applicableTo !== undefined) updateData.applicableTo = updateDiscountDto.applicableTo;
+    if (updateDiscountDto.courseIds !== undefined) updateData.courseIds = updateDiscountDto.courseIds;
+    if (updateDiscountDto.minPurchaseAmount !== undefined) updateData.minPurchaseAmount = updateDiscountDto.minPurchaseAmount;
+    if (updateDiscountDto.maxDiscountAmount !== undefined) updateData.maxDiscountAmount = updateDiscountDto.maxDiscountAmount;
+    if (updateDiscountDto.usageLimit !== undefined) updateData.usageLimit = updateDiscountDto.usageLimit;
+    if (updateDiscountDto.validFrom !== undefined) updateData.validFrom = discount.validFrom;
+    if (updateDiscountDto.validUntil !== undefined) updateData.validUntil = discount.validUntil;
+    if (updateDiscountDto.isActive !== undefined) updateData.isActive = updateDiscountDto.isActive;
+
+    return this.discountModel
+      .findByIdAndUpdate(
+        (discount as any)._id,
+        { $set: updateData },
+        { new: true },
+      )
+      .exec() as Promise<Discount>;
   }
 
   /**

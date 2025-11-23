@@ -185,6 +185,7 @@ export class PaymobService {
     metadata?: {
       tenantSlug?: string;
       courseSlug?: string;
+      subscriptionPlan?: string;
       transactionId?: string;
     },
   ): Promise<{

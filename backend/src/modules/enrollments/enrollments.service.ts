@@ -250,16 +250,24 @@ export class EnrollmentsService {
       throw new NotFoundException('التسجيل غير موجود');
     }
 
-    enrollment.progressPercentage = progressPercentage;
-    enrollment.lastAccessedAt = new Date();
+    const updateData: any = {
+      progressPercentage,
+      lastAccessedAt: new Date(),
+    };
 
     // Mark as completed if progress is 100%
     if (progressPercentage >= 100 && !enrollment.completedAt) {
-      enrollment.status = EnrollmentStatus.COMPLETED;
-      enrollment.completedAt = new Date();
+      updateData.status = EnrollmentStatus.COMPLETED;
+      updateData.completedAt = new Date();
     }
 
-    return enrollment.save();
+    return this.enrollmentModel
+      .findByIdAndUpdate(
+        (enrollment as any)._id,
+        { $set: updateData },
+        { new: true },
+      )
+      .exec() as Promise<Enrollment>;
   }
 
   /**
@@ -306,8 +314,12 @@ export class EnrollmentsService {
       throw new BadRequestException('التسجيل ملغي بالفعل');
     }
 
-    enrollment.status = EnrollmentStatus.CANCELLED;
-    await enrollment.save();
+    await this.enrollmentModel
+      .updateOne(
+        { _id: (enrollment as any)._id },
+        { $set: { status: EnrollmentStatus.CANCELLED } },
+      )
+      .exec();
 
     // Decrement course enrollment count
     await this.courseModel

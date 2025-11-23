@@ -101,8 +101,13 @@ export class CustomFieldsService {
       }
     }
 
-    Object.assign(field, updateCustomFieldDto);
-    return field.save();
+    return this.customFieldModel
+      .findByIdAndUpdate(
+        (field as any)._id,
+        { $set: updateCustomFieldDto },
+        { new: true },
+      )
+      .exec() as Promise<CustomField>;
   }
 
   /**

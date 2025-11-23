@@ -7,6 +7,7 @@ import {
   DiskHealthIndicator,
 } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('health')
 @SkipThrottle() // Health checks should not be rate limited

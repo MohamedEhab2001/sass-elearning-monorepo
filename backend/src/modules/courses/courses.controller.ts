@@ -12,10 +12,11 @@ import {
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto, UpdateCourseDto, PublishCourseDto } from './dto/course.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { CourseStatus } from './schemas/course.schema';
+import { AuthenticatedRequest } from '../../common/interfaces/authenticated-request.interface';
 
 @Controller('courses')
 @UseGuards(JwtAuthGuard)
@@ -28,11 +29,11 @@ export class CoursesController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles('instructor', 'admin')
-  async create(@Body() createCourseDto: CreateCourseDto, @Request() req) {
+  async create(@Body() createCourseDto: CreateCourseDto, @Request() req: AuthenticatedRequest) {
     return this.coursesService.create(
       createCourseDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -41,7 +42,7 @@ export class CoursesController {
    */
   @Get()
   async findAll(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: CourseStatus,
@@ -54,7 +55,7 @@ export class CoursesController {
     const instructorId = req.user.role === 'instructor' ? req.user.userId : undefined;
 
     return this.coursesService.findAll(
-      req.user.tenantId,
+      req.user.tenantId!,
       instructorId,
       pageNum,
       limitNum,
@@ -69,24 +70,24 @@ export class CoursesController {
   @Get('stats')
   @UseGuards(RolesGuard)
   @Roles('instructor', 'admin')
-  async getStats(@Request() req) {
-    return this.coursesService.getStats(req.user.userId, req.user.tenantId);
+  async getStats(@Request() req: AuthenticatedRequest) {
+    return this.coursesService.getStats(req.user.userId, req.user.tenantId!);
   }
 
   /**
    * Get a single course by ID
    */
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
-    return this.coursesService.findOne(id, req.user.tenantId);
+  async findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.coursesService.findOne(id, req.user.tenantId!);
   }
 
   /**
    * Get a course by slug (public endpoint)
    */
   @Get('slug/:slug')
-  async findBySlug(@Param('slug') slug: string, @Request() req) {
-    return this.coursesService.findBySlug(slug, req.user.tenantId);
+  async findBySlug(@Param('slug') slug: string, @Request() req: AuthenticatedRequest) {
+    return this.coursesService.findBySlug(slug, req.user.tenantId!);
   }
 
   /**
@@ -98,13 +99,13 @@ export class CoursesController {
   async update(
     @Param('id') id: string,
     @Body() updateCourseDto: UpdateCourseDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.coursesService.update(
       id,
       updateCourseDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -117,13 +118,13 @@ export class CoursesController {
   async publish(
     @Param('id') id: string,
     @Body() publishCourseDto: PublishCourseDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.coursesService.publish(
       id,
       publishCourseDto,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 
@@ -133,11 +134,11 @@ export class CoursesController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('instructor', 'admin')
-  async delete(@Param('id') id: string, @Request() req) {
+  async delete(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.coursesService.delete(
       id,
       req.user.userId,
-      req.user.tenantId,
+      req.user.tenantId!,
     );
   }
 }
